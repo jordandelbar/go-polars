@@ -143,3 +143,53 @@ func (df DataFrame) Head(n int) *DataFrame {
 
 	return &DataFrame{ptr: (*C.CDataFrame)(cHeadDf)}
 }
+
+func (df *DataFrame) WithColumns(exprs ...Expr) *DataFrame {
+	cExprs := make([]*C.CExpr, len(exprs))
+	for i, expr := range exprs {
+		cExprs[i] = expr.ptr
+	}
+
+	cExprsPtr := (**C.CExpr)(unsafe.Pointer(&cExprs[0]))
+	cExprsLen := C.int(len(exprs))
+
+	newDfPtr := C.with_columns(df.ptr, cExprsPtr, cExprsLen)
+
+	if newDfPtr == nil {
+		log.Printf("error: %s", errors.New(C.GoString(C.get_last_error())))
+		return &DataFrame{}
+	}
+
+	return &DataFrame{ptr: (*C.CDataFrame)(newDfPtr)}
+}
+
+func Lit(value interface{}) Expr {
+	var cExpr *C.CExpr
+
+	switch v := value.(type) {
+	case int64:
+		cExpr = C.lit_int64(C.long(v))
+	case int32:
+		cExpr = C.lit_int32(C.int(v))
+	case int:
+		cExpr = C.lit_int64(C.long(v)) // Treat as int64
+	case float64:
+		cExpr = C.lit_float64(C.double(v))
+	case float32:
+		cExpr = C.lit_float32(C.float(v))
+	case string:
+		cStr := C.CString(v)
+		defer C.free(unsafe.Pointer(cStr))
+		cExpr = C.lit_string(cStr)
+	case bool:
+		cExpr = C.lit_bool(C.uint8_t(0))
+		if v {
+			cExpr = C.lit_bool(C.uint8_t(1))
+		}
+	default:
+		// Handle other types or return an error
+		panic(fmt.Sprintf("Unsupported literal type: %T", value))
+	}
+
+	return Expr{ptr: (*C.CExpr)(cExpr)}
+}

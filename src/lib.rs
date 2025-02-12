@@ -1,7 +1,7 @@
 use polars::prelude::*;
 use std::ffi::{CStr, CString};
 use std::fs::File;
-use std::os::raw::c_char;
+use std::os::raw::{c_char, c_int};
 use std::ptr;
 use std::sync::Mutex;
 
@@ -350,4 +350,82 @@ pub extern "C" fn write_csv(df_ptr: *mut CDataFrame, file_path: *const c_char) -
             }
         }
     }
+}
+
+#[no_mangle]
+pub extern "C" fn with_columns(
+    df_ptr: *mut CDataFrame,
+    exprs_ptr: *mut *mut CExpr,
+    exprs_len: c_int,
+) -> *mut CDataFrame {
+    unsafe {
+        let df_result = c_df_to_polars_df_mut(df_ptr);
+
+        match df_result {
+            Ok(df) => {
+                let mut exprs: Vec<Expr> = Vec::new();
+                let exprs_slice = std::slice::from_raw_parts(exprs_ptr, exprs_len as usize);
+
+                for &expr_ptr in exprs_slice {
+                    match c_expr_to_expr(expr_ptr) {
+                        Ok(expr) => exprs.push(expr.clone()),
+                        Err(e) => {
+                            *LAST_ERROR.lock().unwrap() =
+                                Some(format!("Error converting expr: {}", e));
+                            return ptr::null_mut();
+                        }
+                    }
+                }
+
+                let mut lazy_df = df.clone().lazy();
+                for expr in exprs {
+                    lazy_df = lazy_df.with_column(expr);
+                }
+
+                let new_df = match lazy_df.collect() {
+                    Ok(df) => df,
+                    Err(e) => {
+                        *LAST_ERROR.lock().unwrap() = Some(format!("Error with_columns: {}", e));
+                        return ptr::null_mut();
+                    }
+                };
+                polars_df_to_c_df(new_df)
+            }
+            Err(e) => {
+                *LAST_ERROR.lock().unwrap() = Some(format!("Error in with_columns: {}", e));
+                ptr::null_mut()
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn lit_int64(val: i64) -> *mut CExpr {
+    expr_to_c_expr(lit(val))
+}
+
+#[no_mangle]
+pub extern "C" fn lit_int32(val: i32) -> *mut CExpr {
+    expr_to_c_expr(lit(val))
+}
+
+#[no_mangle]
+pub extern "C" fn lit_float64(val: f64) -> *mut CExpr {
+    expr_to_c_expr(lit(val))
+}
+
+#[no_mangle]
+pub extern "C" fn lit_float32(val: f32) -> *mut CExpr {
+    expr_to_c_expr(lit(val))
+}
+
+#[no_mangle]
+pub extern "C" fn lit_string(val: *const c_char) -> *mut CExpr {
+    let val_str = unsafe { CStr::from_ptr(val).to_str().unwrap_or_default() };
+    expr_to_c_expr(lit(val_str))
+}
+
+#[no_mangle]
+pub extern "C" fn lit_bool(val: u8) -> *mut CExpr {
+    expr_to_c_expr(lit(val != 0))
 }

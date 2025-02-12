@@ -33,7 +33,7 @@ func main() {
 		fmt.Println("Blub is there")
 	}
 
-	firstRowsDfGt1 := df.Head(5).Filter(polars.Col("blub").Gt(1))
+	firstRowsDfGt1 := df.Head(5).Filter(polars.Col("blub").Gt(1)).WithColumns(polars.Lit("hello"))
 	fmt.Println(firstRowsDfGt1)
 
 	err = filteredDf.WriteCSV("output.csv")
