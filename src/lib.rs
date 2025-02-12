@@ -24,8 +24,6 @@ pub struct CGroupBy<'a> {
     pub handle: *mut GroupBy<'a>,
 }
 
-// --- Conversion Functions ---
-
 fn polars_df_to_c_df(df: DataFrame) -> *mut CDataFrame {
     let boxed_df = Box::new(df);
     let handle = Box::into_raw(boxed_df);

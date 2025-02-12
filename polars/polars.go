@@ -1,14 +1,16 @@
 package polars
 
 /*
-#cgo LDFLAGS: -L../target/release -lpolars_go
+#cgo CFLAGS: -I${SRCDIR}
+#cgo LDFLAGS: -L${SRCDIR}/lib -lpolars_go
+#cgo linux LDFLAGS: -Wl,-rpath=${SRCDIR}/lib
+#cgo darwin LDFLAGS: -Wl,-rpath,${SRCDIR}/lib
 #include "polars_go.h"
 #include <stdlib.h>
 */
 import "C"
 
 import (
-	_ "embed"
 	"errors"
 	"fmt"
 	"log"
@@ -17,19 +19,16 @@ import (
 	"unsafe"
 )
 
-//go:embed lib/libpolars_go.so
-var libpolarsGo []byte
-
 func init() {
-	tmpDir := os.TempDir()
-	libPath := filepath.Join(tmpDir, "libpolars_go.so")
-
-	if err := os.WriteFile(libPath, libpolarsGo, 0755); err != nil {
-		fmt.Println("Failed to extract libpolars_go.so:", err)
+	exePath, err := os.Executable()
+	if err != nil {
+		fmt.Println("Failed to get executable path:", err)
 		return
 	}
+	libPath := filepath.Join(filepath.Dir(exePath), "polars/lib")
 
-	if err := os.Setenv("LD_LIBRARY_PATH", tmpDir+":"+os.Getenv("LD_LIBRARY_PATH")); err != nil {
+	err = os.Setenv("LD_LIBRARY_PATH", libPath+":"+os.Getenv("LD_LIBRARY_PATH"))
+	if err != nil {
 		fmt.Println("Failed to set LD_LIBRARY_PATH:", err)
 	}
 }
