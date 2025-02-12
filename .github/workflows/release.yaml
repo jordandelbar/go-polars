@@ -55,7 +55,7 @@ jobs:
       - name: Build
         run: |
           cd polars/bindings
-          cargo build --release -j 2
+          cargo build --release -j 1
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
