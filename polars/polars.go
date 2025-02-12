@@ -6,12 +6,33 @@ package polars
 #include <stdlib.h>
 */
 import "C"
+
 import (
+	_ "embed"
 	"errors"
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 	"unsafe"
 )
+
+//go:embed lib/libpolars_go.so
+var libpolarsGo []byte
+
+func init() {
+	tmpDir := os.TempDir()
+	libPath := filepath.Join(tmpDir, "libpolars_go.so")
+
+	if err := os.WriteFile(libPath, libpolarsGo, 0755); err != nil {
+		fmt.Println("Failed to extract libpolars_go.so:", err)
+		return
+	}
+
+	if err := os.Setenv("LD_LIBRARY_PATH", tmpDir+":"+os.Getenv("LD_LIBRARY_PATH")); err != nil {
+		fmt.Println("Failed to set LD_LIBRARY_PATH:", err)
+	}
+}
 
 type DataFrame struct {
 	ptr *C.CDataFrame
