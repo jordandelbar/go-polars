@@ -42,4 +42,6 @@ func main() {
 	}
 
 	fmt.Println("5 first rows of filteredDf", filteredDf.Head(5))
+	fmt.Println("Original df", df)
+	fmt.Println("Original df columns", df.Columns())
 }

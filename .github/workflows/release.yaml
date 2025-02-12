@@ -1,0 +1,61 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+  build-release:
+    needs: create-release
+    name: Build Release - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: libpolars_go.so
+            asset_name: libpolars_go-linux-amd64.so
+          - os: windows-latest
+            artifact_name: polars_go.dll
+            asset_name: polars_go-windows-amd64.dll
+          - os: macos-latest
+            artifact_name: libpolars_go.dylib
+            asset_name: libpolars_go-darwin-amd64.dylib
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Build
+        run: |
+          cd polars/bindings
+          cargo build --release
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./polars/target/release/${{ matrix.artifact_name }}
+          asset_name: ${{ matrix.asset_name }}
+          asset_content_type: application/octet-stream

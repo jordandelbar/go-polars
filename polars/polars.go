@@ -2,9 +2,9 @@ package polars
 
 /*
 #cgo CFLAGS: -I${SRCDIR}
-#cgo LDFLAGS: -L${SRCDIR}/lib -lpolars_go
-#cgo linux LDFLAGS: -Wl,-rpath=${SRCDIR}/lib
-#cgo darwin LDFLAGS: -Wl,-rpath,${SRCDIR}/lib
+#cgo LDFLAGS: -L${SRCDIR}/bindings/target/release -lpolars_go
+#cgo linux LDFLAGS: -Wl,-rpath=${SRCDIR}/bindings/target/release
+#cgo darwin LDFLAGS: -Wl,-rpath,${SRCDIR}/bindings/target/release
 #include "polars_go.h"
 #include <stdlib.h>
 */
@@ -71,19 +71,6 @@ func (df *DataFrame) String() string {
 	return C.GoString(cStr)
 }
 
-// ReadCSV reads a CSV file into a DataFrame.
-func ReadCSV(filePath string) (*DataFrame, error) {
-	cPath := C.CString(filePath)
-	defer C.free(unsafe.Pointer(cPath))
-
-	df := C.read_csv(cPath)
-	if df == nil || (*C.CDataFrame)(df).handle == nil {
-		return nil, errors.New(C.GoString(C.get_last_error()))
-	}
-
-	return &DataFrame{ptr: (*C.CDataFrame)(df)}, nil
-}
-
 // Free releases the memory associated with the DataFrame.
 func (df *DataFrame) Free() {
 	if df.ptr != nil {
@@ -137,24 +124,6 @@ func Col(name string) Expr {
 // Gt creates a "greater than" expression.
 func (e Expr) Gt(value int64) Expr {
 	return Expr{ptr: (*C.CExpr)(C.col_gt(e.ptr, C.long(value)))}
-}
-
-// WriteCSV writes the DataFrame to a CSV file.
-func (df DataFrame) WriteCSV(filePath string) error {
-	cFilePath := C.CString(filePath)
-	defer C.free(unsafe.Pointer(cFilePath))
-
-	res := C.write_csv(df.ptr, cFilePath)
-
-	if res == nil {
-		return errors.New("write_csv error: unknown failure")
-	}
-
-	msg := C.GoString(res)
-	if msg != "CSV written successfully" {
-		return fmt.Errorf("write_csv error: %s", msg)
-	}
-	return nil
 }
 
 // Head returns the first n rows of the DataFrame.
