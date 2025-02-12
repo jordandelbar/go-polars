@@ -2,9 +2,9 @@ package polars
 
 /*
 #cgo CFLAGS: -I${SRCDIR}
-#cgo LDFLAGS: -L${SRCDIR}/bindings/target/release -lpolars_go
-#cgo linux LDFLAGS: -Wl,-rpath=${SRCDIR}/bindings/target/release
-#cgo darwin LDFLAGS: -Wl,-rpath,${SRCDIR}/bindings/target/release
+#cgo LDFLAGS: -L${SRCDIR}/bindings/target/debug -lpolars_go
+#cgo linux LDFLAGS: -Wl,-rpath=${SRCDIR}/bindings/target/debug
+#cgo darwin LDFLAGS: -Wl,-rpath,${SRCDIR}/bindings/target/debug
 #include "polars_go.h"
 #include <stdlib.h>
 */
