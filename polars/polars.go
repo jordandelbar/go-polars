@@ -33,14 +33,17 @@ func init() {
 	}
 }
 
+// DataFrame represents a Polars DataFrame.
 type DataFrame struct {
 	ptr *C.CDataFrame
 }
 
+// Expr represents a Polars expression.
 type Expr struct {
 	ptr *C.CExpr
 }
 
+// String returns a string representation of the DataFrame.
 func (df *DataFrame) String() string {
 	if df.ptr == nil || df.ptr.handle == nil {
 		return "<nil DataFrame>"
@@ -55,6 +58,7 @@ func (df *DataFrame) String() string {
 	return C.GoString(cStr)
 }
 
+// ReadCSV reads a CSV file into a DataFrame.
 func ReadCSV(filePath string) (*DataFrame, error) {
 	cPath := C.CString(filePath)
 	defer C.free(unsafe.Pointer(cPath))
@@ -67,6 +71,7 @@ func ReadCSV(filePath string) (*DataFrame, error) {
 	return &DataFrame{ptr: (*C.CDataFrame)(df)}, nil
 }
 
+// Free releases the memory associated with the DataFrame.
 func (df *DataFrame) Free() {
 	if df.ptr != nil {
 		C.free_dataframe(df.ptr)
@@ -74,14 +79,17 @@ func (df *DataFrame) Free() {
 	}
 }
 
+// Width returns the number of columns in the DataFrame.
 func (df *DataFrame) Width() int {
 	return int(C.dataframe_width(df.ptr))
 }
 
+// Height returns the number of rows in the DataFrame.
 func (df *DataFrame) Height() int {
 	return int(C.dataframe_height(df.ptr))
 }
 
+// Columns returns a list of column names in the DataFrame.
 func (df *DataFrame) Columns() []string {
 	var names []string
 	for i := 0; ; i++ {
@@ -95,6 +103,7 @@ func (df *DataFrame) Columns() []string {
 	return names
 }
 
+// Filter filters the DataFrame based on the given expression.
 func (df *DataFrame) Filter(expr Expr) *DataFrame {
 	filteredPtr := C.filter(df.ptr, expr.ptr)
 	if filteredPtr == nil {
@@ -105,16 +114,19 @@ func (df *DataFrame) Filter(expr Expr) *DataFrame {
 	return &DataFrame{ptr: (*C.CDataFrame)(filteredPtr)}
 }
 
+// Col creates a new expression representing a column.
 func Col(name string) Expr {
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
 	return Expr{ptr: (*C.CExpr)(C.col(cName))}
 }
 
+// Gt creates a "greater than" expression.
 func (e Expr) Gt(value int64) Expr {
 	return Expr{ptr: (*C.CExpr)(C.col_gt(e.ptr, C.long(value)))}
 }
 
+// WriteCSV writes the DataFrame to a CSV file.
 func (df DataFrame) WriteCSV(filePath string) error {
 	cFilePath := C.CString(filePath)
 	defer C.free(unsafe.Pointer(cFilePath))
@@ -132,6 +144,7 @@ func (df DataFrame) WriteCSV(filePath string) error {
 	return nil
 }
 
+// Head returns the first n rows of the DataFrame.
 func (df DataFrame) Head(n int) *DataFrame {
 	cHeadDf := C.head(df.ptr, C.size_t(n))
 
@@ -144,6 +157,7 @@ func (df DataFrame) Head(n int) *DataFrame {
 	return &DataFrame{ptr: (*C.CDataFrame)(cHeadDf)}
 }
 
+// WithColumns adds or replaces columns in the DataFrame.
 func (df *DataFrame) WithColumns(exprs ...Expr) *DataFrame {
 	cExprs := make([]*C.CExpr, len(exprs))
 	for i, expr := range exprs {
@@ -163,6 +177,7 @@ func (df *DataFrame) WithColumns(exprs ...Expr) *DataFrame {
 	return &DataFrame{ptr: (*C.CDataFrame)(newDfPtr)}
 }
 
+// Lit creates a literal expression.
 func Lit(value interface{}) Expr {
 	var cExpr *C.CExpr
 
@@ -187,7 +202,6 @@ func Lit(value interface{}) Expr {
 			cExpr = C.lit_bool(C.uint8_t(1))
 		}
 	default:
-		// Handle other types or return an error
 		panic(fmt.Sprintf("Unsupported literal type: %T", value))
 	}
 
