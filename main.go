@@ -12,7 +12,7 @@ func main() {
 		panic(err)
 	}
 
-	filteredDf, err := df.Filter(polars.Col("blub").Gt(1))
+	filteredDf := df.Filter(polars.Col("blub").Gt(1))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -28,10 +28,12 @@ func main() {
 		}
 
 	}
-
 	if found {
 		fmt.Println("Blub is there")
 	}
+
+	firstRowsDfGt1 := df.Head(5).Filter(polars.Col("blub").Gt(1))
+	fmt.Println(firstRowsDfGt1)
 
 	err = filteredDf.WriteCSV("output.csv")
 	if err != nil {

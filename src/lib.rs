@@ -184,6 +184,23 @@ pub extern "C" fn filter(df_ptr: *mut CDataFrame, expr_ptr: *mut CExpr) -> *mut 
 }
 
 #[no_mangle]
+pub extern "C" fn head(df_ptr: *mut CDataFrame, n: usize) -> *mut CDataFrame {
+    unsafe {
+        let df_result = c_df_to_polars_df_mut(df_ptr);
+        match df_result {
+            Ok(df) => {
+                let head_df = df.head(Some(n));
+                return polars_df_to_c_df(head_df);
+            }
+            Err(e) => {
+                *LAST_ERROR.lock().unwrap() = Some(format!("Error getting head: {}", e));
+                ptr::null_mut()
+            }
+        }
+    }
+}
+
+#[no_mangle]
 pub extern "C" fn col(name: *const c_char) -> *mut CExpr {
     let name_str = unsafe { CStr::from_ptr(name).to_str().unwrap_or_default() };
     let expr = polars::prelude::col(name_str);
@@ -293,31 +310,6 @@ pub extern "C" fn free_groupby(groupby: *mut CGroupBy) {
             return;
         }
         let _groupby = Box::from_raw(groupby);
-    }
-}
-
-#[no_mangle]
-pub extern "C" fn head(df_ptr: *mut CDataFrame, n: usize) -> *const c_char {
-    unsafe {
-        let df_result = c_df_to_polars_df(df_ptr);
-        match df_result {
-            Ok(df) => {
-                let head_df = df.head(Some(n));
-                let df_str = format!("{:?}", head_df);
-                match CString::new(df_str) {
-                    Ok(c_string) => c_string.into_raw(),
-                    Err(e) => {
-                        *LAST_ERROR.lock().unwrap() =
-                            Some(format!("Error converting head to string: {}", e));
-                        ptr::null()
-                    }
-                }
-            }
-            Err(e) => {
-                *LAST_ERROR.lock().unwrap() = Some(format!("Error getting head: {}", e));
-                ptr::null()
-            }
-        }
     }
 }
 

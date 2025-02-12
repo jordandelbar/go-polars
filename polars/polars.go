@@ -9,6 +9,7 @@ import "C"
 import (
 	"errors"
 	"fmt"
+	"log"
 	"unsafe"
 )
 
@@ -74,12 +75,14 @@ func (df *DataFrame) Columns() []string {
 	return names
 }
 
-func (df *DataFrame) Filter(expr Expr) (*DataFrame, error) {
+func (df *DataFrame) Filter(expr Expr) *DataFrame {
 	filteredPtr := C.filter(df.ptr, expr.ptr)
 	if filteredPtr == nil {
-		return nil, errors.New(C.GoString(C.get_last_error()))
+		err := errors.New(C.GoString(C.get_last_error()))
+		log.Printf("Error while filtering: %s", err)
+		return &DataFrame{}
 	}
-	return &DataFrame{ptr: (*C.CDataFrame)(filteredPtr)}, nil
+	return &DataFrame{ptr: (*C.CDataFrame)(filteredPtr)}
 }
 
 func Col(name string) Expr {
@@ -109,12 +112,14 @@ func (df DataFrame) WriteCSV(filePath string) error {
 	return nil
 }
 
-func (df DataFrame) Head(n int) string {
-	cStr := C.head(df.ptr, C.size_t(n))
-	if cStr == nil {
-		return "Failed to get head of DataFrame"
-	}
-	defer C.free(unsafe.Pointer(cStr))
+func (df DataFrame) Head(n int) *DataFrame {
+	cHeadDf := C.head(df.ptr, C.size_t(n))
 
-	return C.GoString(cStr)
+	if cHeadDf == nil || (*C.CDataFrame)(cHeadDf).handle == nil {
+		err := C.GoString(C.get_last_error())
+		log.Printf("Error getting head: %s", err)
+		return &DataFrame{}
+	}
+
+	return &DataFrame{ptr: (*C.CDataFrame)(cHeadDf)}
 }

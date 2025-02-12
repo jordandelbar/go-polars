@@ -19,7 +19,7 @@ extern void* col(const char* name);
 extern void* col_gt(CExpr* expr, long value);
 
 extern void* filter(CDataFrame* df, CExpr* expr);
-extern const char* head(CDataFrame* df, size_t n);
+extern void* head(CDataFrame* df, size_t n);
 
 extern const char* columns(CDataFrame* df);
 
