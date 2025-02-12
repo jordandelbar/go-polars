@@ -28,6 +28,7 @@ jobs:
 
   build-release:
     needs: create-release
+    timeout-minutes: 60
     name: Build Release - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -54,7 +55,7 @@ jobs:
       - name: Build
         run: |
           cd polars/bindings
-          cargo build --release
+          cargo build --release -j 2
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
