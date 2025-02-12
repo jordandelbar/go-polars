@@ -43,6 +43,19 @@ type Expr struct {
 	ptr *C.CExpr
 }
 
+func (e Expr) Alias(name string) Expr {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+
+	aliasPtr := C.expr_alias(e.ptr, cName) // Call the Rust function
+	if aliasPtr == nil {
+		log.Printf("error aliasing expression")
+		return Expr{ptr: nil}
+	}
+
+	return Expr{ptr: (*C.CExpr)(aliasPtr)}
+}
+
 // String returns a string representation of the DataFrame.
 func (df *DataFrame) String() string {
 	if df.ptr == nil || df.ptr.handle == nil {

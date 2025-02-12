@@ -9,7 +9,7 @@ typedef struct CDataFrame {
 } CDataFrame;
 
 typedef struct CExpr {
-  void* handle;
+  void* inner;
 } CExpr;
 
 typedef struct CGroupBy {
@@ -32,6 +32,7 @@ extern const char* print_dataframe(CDataFrame* df);
 extern const char* get_last_error();
 extern void free_expr(CExpr* expr);
 extern void free_groupby(CGroupBy* groupby);
+extern CExpr* expr_alias(CExpr* expr, const char* alias);
 extern CExpr* lit_int64(int64_t val);
 extern CExpr* lit_int32(int32_t val);
 extern CExpr* lit_float64(double val);

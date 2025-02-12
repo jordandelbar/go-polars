@@ -1,8 +1,10 @@
 use polars::prelude::*;
+use std::cell::RefCell;
 use std::ffi::{CStr, CString};
 use std::fs::File;
 use std::os::raw::{c_char, c_int};
 use std::ptr;
+use std::rc::Rc;
 use std::sync::Mutex;
 
 lazy_static::lazy_static! {
@@ -11,72 +13,77 @@ lazy_static::lazy_static! {
 
 #[repr(C)]
 pub struct CDataFrame {
-    pub handle: *mut DataFrame,
+    pub inner: *mut std::ffi::c_void,
 }
 
 #[repr(C)]
 pub struct CExpr {
-    pub handle: *mut Expr,
+    pub inner: *mut std::ffi::c_void,
 }
 
 #[repr(C)]
-pub struct CGroupBy<'a> {
-    pub handle: *mut GroupBy<'a>,
+pub struct CGroupBy {
+    pub inner: *mut std::ffi::c_void, // Opaque pointer for GroupBy
 }
 
 fn polars_df_to_c_df(df: DataFrame) -> *mut CDataFrame {
-    let boxed_df = Box::new(df);
-    let handle = Box::into_raw(boxed_df);
-    let c_df = CDataFrame { handle };
+    let rc_df = Rc::new(RefCell::new(df));
+    let boxed_df = Box::new(rc_df);
+    let inner = Box::into_raw(boxed_df) as *mut std::ffi::c_void;
+    let c_df = CDataFrame { inner };
     Box::into_raw(Box::new(c_df))
 }
 
-unsafe fn c_df_to_polars_df(c_df: *mut CDataFrame) -> Result<&'static DataFrame, &'static str> {
-    if c_df.is_null() {
-        return Err("DataFrame pointer is null");
+unsafe fn c_df_to_polars_df(c_df: *mut CDataFrame) -> Result<Rc<RefCell<DataFrame>>, String> {
+    if c_df.is_null() || (*c_df).inner.is_null() {
+        return Err("CDataFrame or inner pointer is null".to_string());
     }
-    Ok(&*(*c_df).handle)
+    let rc_df_ptr = (*c_df).inner as *mut Rc<RefCell<DataFrame>>;
+    Ok(Rc::clone(&*rc_df_ptr))
 }
 
-unsafe fn c_df_to_polars_df_mut(
-    c_df: *mut CDataFrame,
-) -> Result<&'static mut DataFrame, &'static str> {
-    if c_df.is_null() {
-        return Err("DataFrame pointer is null");
+unsafe fn c_df_to_polars_df_ref(c_df: *const CDataFrame) -> Result<Rc<RefCell<DataFrame>>, String> {
+    if c_df.is_null() || (*c_df).inner.is_null() {
+        return Err("CDataFrame or inner pointer is null".to_string());
     }
-    Ok(&mut *(*c_df).handle)
+    let rc_df_ptr = (*c_df).inner as *mut Rc<RefCell<DataFrame>>;
+    Ok(Rc::clone(&*rc_df_ptr))
 }
 
-fn expr_to_c_expr(expr: Expr) -> *mut CExpr {
+pub fn expr_to_c_expr(expr: Expr) -> *mut CExpr {
     let boxed_expr = Box::new(expr);
-    let handle = Box::into_raw(boxed_expr);
-    let c_expr = CExpr { handle };
+    let ptr = Box::into_raw(boxed_expr) as *mut std::ffi::c_void;
+    let c_expr = CExpr { inner: ptr };
     Box::into_raw(Box::new(c_expr))
 }
 
-unsafe fn c_expr_to_expr(c_expr: *mut CExpr) -> Result<&'static Expr, &'static str> {
-    if c_expr.is_null() {
-        return Err("Expr pointer is null");
+pub unsafe fn c_expr_to_expr(c_expr: *mut CExpr) -> Result<Expr, String> {
+    if c_expr.is_null() || (*c_expr).inner.is_null() {
+        return Err("CExpr or inner pointer is null".to_string());
     }
-    Ok(&*(*c_expr).handle)
+    let c_expr_struct = Box::from_raw(c_expr);
+    let expr_ptr = c_expr_struct.inner as *mut Expr;
+    let expr = *Box::from_raw(expr_ptr);
+    Ok(expr)
 }
 
-fn groupby_to_c_groupby(gb: GroupBy) -> *mut CGroupBy {
+fn groupby_to_c_groupby(gb: LazyGroupBy) -> *mut CGroupBy {
     let boxed_gb = Box::new(gb);
-    let handle = Box::into_raw(boxed_gb);
-    let c_gb = CGroupBy { handle };
+    let inner = Box::into_raw(boxed_gb) as *mut std::ffi::c_void;
+    let c_gb = CGroupBy { inner };
     Box::into_raw(Box::new(c_gb))
 }
 
 #[allow(dead_code)]
-unsafe fn c_groupby_to_groupby(c_gb: *mut CGroupBy) -> Result<&'static GroupBy, &'static str> {
-    if c_gb.is_null() {
-        return Err("GroupBy pointer is null");
+unsafe fn c_groupby_to_groupby(c_gb: *mut CGroupBy) -> Result<GroupBy<'static>, String> {
+    if c_gb.is_null() || (*c_gb).inner.is_null() {
+        return Err("CGroupBy or inner pointer is null".to_string());
     }
-    Ok(&*(*c_gb).handle)
+    let c_gb_struct = Box::from_raw(c_gb);
+    let gb_ptr = c_gb_struct.inner as *mut GroupBy;
+    let gb = *Box::from_raw(gb_ptr);
+    Ok(gb)
 }
-
-// --- Exported Functions ---
 
 #[no_mangle]
 pub extern "C" fn read_csv(path: *const c_char) -> *mut CDataFrame {
@@ -109,15 +116,19 @@ pub extern "C" fn free_dataframe(df: *mut CDataFrame) {
         }
 
         let c_df = Box::from_raw(df);
-        let _df = Box::from_raw(c_df.handle);
+        drop(Box::from_raw(c_df.inner as *mut Rc<RefCell<DataFrame>>));
+        drop(c_df);
     }
 }
 
 #[no_mangle]
 pub extern "C" fn dataframe_width(df: *const CDataFrame) -> usize {
     unsafe {
-        match c_df_to_polars_df(df as *mut CDataFrame) {
-            Ok(df) => df.width(),
+        match c_df_to_polars_df_ref(df) {
+            Ok(rc_df) => {
+                let df = rc_df.borrow();
+                df.width()
+            }
             Err(_) => 0,
         }
     }
@@ -126,8 +137,11 @@ pub extern "C" fn dataframe_width(df: *const CDataFrame) -> usize {
 #[no_mangle]
 pub extern "C" fn dataframe_height(df: *const CDataFrame) -> usize {
     unsafe {
-        match c_df_to_polars_df(df as *mut CDataFrame) {
-            Ok(df) => df.height(),
+        match c_df_to_polars_df_ref(df) {
+            Ok(rc_df) => {
+                let df = rc_df.borrow();
+                df.height()
+            }
             Err(_) => 0,
         }
     }
@@ -136,8 +150,9 @@ pub extern "C" fn dataframe_height(df: *const CDataFrame) -> usize {
 #[no_mangle]
 pub extern "C" fn dataframe_column_name(df: *const CDataFrame, index: usize) -> *const c_char {
     unsafe {
-        match c_df_to_polars_df(df as *mut CDataFrame) {
-            Ok(df) => {
+        match c_df_to_polars_df_ref(df) {
+            Ok(rc_df) => {
+                let df = rc_df.borrow_mut();
                 let names = df.get_column_names();
                 if index < names.len() {
                     let name = names[index];
@@ -164,11 +179,9 @@ pub extern "C" fn dataframe_column_name(df: *const CDataFrame, index: usize) -> 
 #[no_mangle]
 pub extern "C" fn filter(df_ptr: *mut CDataFrame, expr_ptr: *mut CExpr) -> *mut CDataFrame {
     unsafe {
-        let df_result = c_df_to_polars_df_mut(df_ptr);
-        let expr_result = c_expr_to_expr(expr_ptr);
-
-        match (df_result, expr_result) {
-            (Ok(df), Ok(expr)) => {
+        match (c_df_to_polars_df(df_ptr), c_expr_to_expr(expr_ptr)) {
+            (Ok(rc_df), Ok(expr)) => {
+                let df = rc_df.borrow_mut();
                 let filtered_df = match df.clone().lazy().filter(expr.clone()).collect() {
                     Ok(df) => df,
                     Err(_) => return std::ptr::null_mut(),
@@ -184,9 +197,10 @@ pub extern "C" fn filter(df_ptr: *mut CDataFrame, expr_ptr: *mut CExpr) -> *mut 
 #[no_mangle]
 pub extern "C" fn head(df_ptr: *mut CDataFrame, n: usize) -> *mut CDataFrame {
     unsafe {
-        let df_result = c_df_to_polars_df_mut(df_ptr);
+        let df_result = c_df_to_polars_df(df_ptr);
         match df_result {
-            Ok(df) => {
+            Ok(rc_df) => {
+                let df = rc_df.borrow_mut();
                 let head_df = df.head(Some(n));
                 return polars_df_to_c_df(head_df);
             }
@@ -220,19 +234,19 @@ pub extern "C" fn col_gt(expr_ptr: *mut CExpr, value: i64) -> *mut CExpr {
 }
 
 #[no_mangle]
-pub extern "C" fn group_by(
-    df_ptr: *mut CDataFrame,
-    columns_ptr: *const c_char,
-) -> *mut CGroupBy<'static> {
+pub extern "C" fn group_by(df_ptr: *mut CDataFrame, columns_ptr: *const c_char) -> *mut CGroupBy {
     unsafe {
-        let df_result = c_df_to_polars_df_mut(df_ptr);
-
-        match df_result {
-            Ok(df) => {
+        match c_df_to_polars_df(df_ptr) {
+            Ok(rc_df) => {
+                let df = rc_df.borrow();
                 let columns_str = CStr::from_ptr(columns_ptr).to_str().unwrap();
                 let columns: Vec<&str> = columns_str.split(',').collect();
-                let groupby = df.group_by(columns).unwrap();
-                groupby_to_c_groupby(groupby)
+
+                let lazy_df = df.clone().lazy();
+
+                let lazy_group_by = lazy_df.group_by(columns); // Get LazyGroupBy
+
+                groupby_to_c_groupby(lazy_group_by) // Pass LazyGroupBy directly
             }
             Err(e) => {
                 *LAST_ERROR.lock().unwrap() = Some(format!("Group by error: {}", e));
@@ -247,7 +261,8 @@ pub extern "C" fn columns(df_ptr: *mut CDataFrame) -> *const c_char {
     unsafe {
         let df_result = c_df_to_polars_df(df_ptr);
         match df_result {
-            Ok(df) => {
+            Ok(rc_df) => {
+                let df = rc_df.borrow_mut();
                 let col_names: Vec<String> = df
                     .get_column_names()
                     .into_iter()
@@ -269,7 +284,8 @@ pub extern "C" fn print_dataframe(df_ptr: *mut CDataFrame) -> *const c_char {
     unsafe {
         let df_result = c_df_to_polars_df(df_ptr);
         match df_result {
-            Ok(df) => {
+            Ok(rc_df) => {
+                let df = rc_df.borrow();
                 let df_str = format!("{}", df);
                 CString::new(df_str).unwrap().into_raw()
             }
@@ -314,10 +330,11 @@ pub extern "C" fn free_groupby(groupby: *mut CGroupBy) {
 #[no_mangle]
 pub extern "C" fn write_csv(df_ptr: *mut CDataFrame, file_path: *const c_char) -> *const c_char {
     unsafe {
-        let df_result = c_df_to_polars_df_mut(df_ptr);
+        let df_result = c_df_to_polars_df(df_ptr);
         match df_result {
-            Ok(df) => {
+            Ok(rc_df) => {
                 let path_str = CStr::from_ptr(file_path).to_str().unwrap();
+                let df = rc_df.borrow_mut();
                 let mut df_clone = df.clone();
 
                 match File::create(path_str) {
@@ -359,10 +376,8 @@ pub extern "C" fn with_columns(
     exprs_len: c_int,
 ) -> *mut CDataFrame {
     unsafe {
-        let df_result = c_df_to_polars_df_mut(df_ptr);
-
-        match df_result {
-            Ok(df) => {
+        match c_df_to_polars_df(df_ptr) {
+            Ok(rc_df) => {
                 let mut exprs: Vec<Expr> = Vec::new();
                 let exprs_slice = std::slice::from_raw_parts(exprs_ptr, exprs_len as usize);
 
@@ -377,6 +392,7 @@ pub extern "C" fn with_columns(
                     }
                 }
 
+                let df = rc_df.borrow();
                 let mut lazy_df = df.clone().lazy();
                 for expr in exprs {
                     lazy_df = lazy_df.with_column(expr);
@@ -396,6 +412,23 @@ pub extern "C" fn with_columns(
                 ptr::null_mut()
             }
         }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn expr_alias(c_expr: *mut CExpr, alias: *const c_char) -> *mut CExpr {
+    unsafe {
+        let expr = match c_expr_to_expr(c_expr) {
+            Ok(expr) => expr,
+            Err(e) => {
+                *LAST_ERROR.lock().unwrap() = Some(e);
+                return std::ptr::null_mut();
+            }
+        };
+
+        let alias_str = CStr::from_ptr(alias).to_str().unwrap_or_default();
+        let aliased_expr = expr.alias(alias_str);
+        expr_to_c_expr(aliased_expr)
     }
 }
 
