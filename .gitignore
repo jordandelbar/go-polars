@@ -48,3 +48,4 @@ go.work.sum
 
 # rust .so library
 !polars/lib/*.so
+examples/basic/output.csv

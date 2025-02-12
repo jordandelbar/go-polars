@@ -8,12 +8,12 @@ import (
 )
 
 func main() {
-	df, err := polars.ReadCSV("data.csv")
+	df, err := polars.ReadCSV("../../testdata/iris.csv")
 	if err != nil {
 		panic(err)
 	}
 
-	filteredDf := df.Filter(polars.Col("blub").Gt(1))
+	filteredDf := df.Filter(polars.Col("petal.length").Gt(1))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -23,17 +23,17 @@ func main() {
 	dfColumns := df.Columns()
 	found := false
 	for _, col := range dfColumns {
-		if col == "blub" {
+		if col == "variety" {
 			found = true
 			break
 		}
 
 	}
 	if found {
-		fmt.Println("Blub is there")
+		fmt.Println("Column `variety` is there")
 	}
 
-	firstRowsDfGt1 := df.Head(5).Filter(polars.Col("blub").Gt(1)).WithColumns(polars.Lit("hello").Alias("test"))
+	firstRowsDfGt1 := df.Head(5).Filter(polars.Col("petal.length").Gt(1)).WithColumns(polars.Lit("hello").Alias("test"))
 	fmt.Println(firstRowsDfGt1)
 
 	err = filteredDf.WriteCSV("output.csv")
