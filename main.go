@@ -3,7 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
-	"polars_go/polars"
+
+	"github.com/jordandelbar/go-polars/polars"
 )
 
 func main() {
