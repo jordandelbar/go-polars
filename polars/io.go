@@ -23,7 +23,7 @@ func ReadCSV(filePath string) (*DataFrame, error) {
 
 	df := C.read_csv(cPath)
 	if df == nil || (*C.CDataFrame)(df).handle == nil {
-		return nil, errors.New(C.GoString(C.get_last_error()))
+		return nil, errors.New(C.GoString(C.get_last_error_message()))
 	}
 
 	return &DataFrame{ptr: (*C.CDataFrame)(df)}, nil

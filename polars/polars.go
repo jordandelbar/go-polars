@@ -14,24 +14,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
-	"path/filepath"
 	"unsafe"
 )
-
-func init() {
-	exePath, err := os.Executable()
-	if err != nil {
-		fmt.Println("Failed to get executable path:", err)
-		return
-	}
-	libPath := filepath.Join(filepath.Dir(exePath), "polars/lib")
-
-	err = os.Setenv("LD_LIBRARY_PATH", libPath+":"+os.Getenv("LD_LIBRARY_PATH"))
-	if err != nil {
-		fmt.Println("Failed to set LD_LIBRARY_PATH:", err)
-	}
-}
 
 // DataFrame represents a Polars DataFrame.
 type DataFrame struct {
@@ -107,7 +91,7 @@ func (df *DataFrame) Columns() []string {
 func (df *DataFrame) Filter(expr Expr) *DataFrame {
 	filteredPtr := C.filter(df.ptr, expr.ptr)
 	if filteredPtr == nil {
-		err := errors.New(C.GoString(C.get_last_error()))
+		err := errors.New(C.GoString(C.get_last_error_message()))
 		log.Printf("Error while filtering: %s", err)
 		return &DataFrame{}
 	}
@@ -131,7 +115,7 @@ func (df DataFrame) Head(n int) *DataFrame {
 	cHeadDf := C.head(df.ptr, C.size_t(n))
 
 	if cHeadDf == nil || (*C.CDataFrame)(cHeadDf).handle == nil {
-		err := C.GoString(C.get_last_error())
+		err := C.GoString(C.get_last_error_message())
 		log.Printf("Error getting head: %s", err)
 		return &DataFrame{}
 	}
@@ -152,7 +136,7 @@ func (df *DataFrame) WithColumns(exprs ...Expr) *DataFrame {
 	newDfPtr := C.with_columns(df.ptr, cExprsPtr, cExprsLen)
 
 	if newDfPtr == nil {
-		log.Printf("error: %s", errors.New(C.GoString(C.get_last_error())))
+		log.Printf("error: %s", errors.New(C.GoString(C.get_last_error_message())))
 		return &DataFrame{}
 	}
 

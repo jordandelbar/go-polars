@@ -29,7 +29,7 @@ extern CExpr* col_gt(CExpr* expr, int64_t value);
 extern CGroupBy* group_by(CDataFrame* df, const char* columns);
 extern const char* columns(CDataFrame* df);
 extern const char* print_dataframe(CDataFrame* df);
-extern const char* get_last_error();
+extern const char* get_last_error_message();
 extern void free_expr(CExpr* expr);
 extern void free_groupby(CGroupBy* groupby);
 extern CExpr* expr_alias(CExpr* expr, const char* alias);
