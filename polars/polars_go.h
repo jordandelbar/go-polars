@@ -17,8 +17,10 @@ typedef struct CGroupBy {
 } CGroupBy;
 
 extern CDataFrame* read_csv(const char* path);
+extern CDataFrame* read_parquet(const char* path);
 extern void free_dataframe(CDataFrame* df);
 extern const char* write_csv(CDataFrame* df, const char* path);
+extern const char* write_parquet(CDataFrame* df, const char* path);
 extern size_t dataframe_width(const CDataFrame* df);
 extern size_t dataframe_height(const CDataFrame* df);
 extern const char* dataframe_column_name(const CDataFrame* df, size_t index);

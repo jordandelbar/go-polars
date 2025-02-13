@@ -32,6 +32,38 @@ pub extern "C" fn read_csv(path: *const c_char) -> *mut CDataFrame {
 }
 
 #[no_mangle]
+pub extern "C" fn read_parquet(path: *const c_char) -> *mut CDataFrame {
+    unsafe {
+        let c_str = CStr::from_ptr(path);
+        let path_str = match c_str.to_str() {
+            Ok(s) => s,
+            Err(_) => {
+                *LAST_ERROR.lock().unwrap() = Some("Invalid UTF-8 path".to_string());
+                return ptr::null_mut();
+            }
+        };
+
+        let file = match File::open(path_str) {
+            Ok(f) => f,
+            Err(e) => {
+                *LAST_ERROR.lock().unwrap() = Some(format!("Failed to open file: {}", e));
+                return ptr::null_mut();
+            }
+        };
+
+        let parquet_reader = ParquetReader::new(file);
+
+        match parquet_reader.finish() {
+            Ok(df) => polars_df_to_c_df(df),
+            Err(e) => {
+                *LAST_ERROR.lock().unwrap() = Some(format!("Failed to read Parquet: {}", e));
+                ptr::null_mut()
+            }
+        }
+    }
+}
+
+#[no_mangle]
 pub extern "C" fn free_dataframe(df: *mut CDataFrame) {
     unsafe {
         if df.is_null() {
@@ -213,6 +245,55 @@ pub extern "C" fn write_csv(df_ptr: *mut CDataFrame, file_path: *const c_char) -
                 CString::new(format!("Error in write_csv: {}", e))
                     .unwrap()
                     .into_raw()
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn write_parquet(
+    df_ptr: *mut CDataFrame,
+    file_path: *const c_char,
+) -> *const c_char {
+    unsafe {
+        let c_str = CStr::from_ptr(file_path);
+        let path_str = match c_str.to_str() {
+            Ok(s) => s,
+            Err(_) => {
+                *LAST_ERROR.lock().unwrap() = Some("Invalid UTF-8 path".to_string());
+                return ptr::null_mut();
+            }
+        };
+
+        match c_df_to_polars_df(df_ptr) {
+            Ok(rc_df) => {
+                let df = rc_df.borrow_mut();
+                let file = match File::create(path_str) {
+                    Ok(f) => f,
+                    Err(e) => {
+                        *LAST_ERROR.lock().unwrap() = Some(format!("Failed to create file: {}", e));
+                        return ptr::null_mut();
+                    }
+                };
+
+                let writer = ParquetWriter::new(file);
+
+                match writer.finish(&mut df.clone()) {
+                    Ok(_) => CString::new("Parquet written successfully")
+                        .unwrap()
+                        .into_raw(),
+                    Err(e) => {
+                        *LAST_ERROR.lock().unwrap() =
+                            Some(format!("Failed to write Parquet: {}", e));
+                        CString::new(format!("Failed to write Parquet: {}", e))
+                            .unwrap()
+                            .into_raw()
+                    }
+                }
+            }
+            Err(e) => {
+                *LAST_ERROR.lock().unwrap() = Some(format!("Error getting DataFrame: {}", e));
+                ptr::null_mut()
             }
         }
     }

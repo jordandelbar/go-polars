@@ -47,4 +47,16 @@ func main() {
 	fmt.Println("5 first rows of petalLengthGreaterThanOne\n", petalLengthGreaterThanOne.Head(5))
 	fmt.Println("Original irisDf\n", irisDf)
 	fmt.Println("Original irisDf columns\n", irisDf.Columns())
+
+	err = petalLengthGreaterThanOne.WriteParquet("output.parquet")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	readBackDf, err := polars.ReadParquet("output.parquet")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Parquet file: \n", readBackDf)
 }

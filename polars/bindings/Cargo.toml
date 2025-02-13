@@ -7,7 +7,12 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-polars = { version = "0.46", features = ["csv", "polars-io", "lazy"] }
+polars = { version = "0.46", features = [
+    "csv",
+    "polars-io",
+    "lazy",
+    "parquet",
+] }
 lazy_static = "1.5"
 
 [profile.release]
