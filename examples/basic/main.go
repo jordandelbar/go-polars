@@ -41,6 +41,9 @@ func main() {
 		fmt.Println("Problem when writing csv")
 	}
 
+	selectDf := irisDf.Select(polars.Col("petal.length"), polars.Col("sepal.width"))
+	fmt.Println("Petal length and sepal width\n", selectDf)
+
 	fmt.Println("5 first rows of petalLengthGreaterThanOne\n", petalLengthGreaterThanOne.Head(5))
 	fmt.Println("Original irisDf\n", irisDf)
 	fmt.Println("Original irisDf columns\n", irisDf.Columns())

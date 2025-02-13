@@ -23,6 +23,7 @@ extern size_t dataframe_width(const CDataFrame* df);
 extern size_t dataframe_height(const CDataFrame* df);
 extern const char* dataframe_column_name(const CDataFrame* df, size_t index);
 extern CDataFrame* filter(CDataFrame* df, CExpr* expr);
+extern CDataFrame* select_columns(CDataFrame *df, CExpr* *exprs, int exprs_len);
 extern CDataFrame* head(CDataFrame* df, size_t n);
 extern CExpr* col(const char* name);
 extern CExpr* col_gt(CExpr* expr, int64_t value);

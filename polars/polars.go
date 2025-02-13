@@ -98,6 +98,31 @@ func (df *DataFrame) Filter(expr Expr) *DataFrame {
 	return &DataFrame{ptr: (*C.CDataFrame)(filteredPtr)}
 }
 
+// Select allows selecting specific columns from the DataFrame.
+func (df *DataFrame) Select(exprs ...Expr) *DataFrame {
+	if df.ptr == nil {
+		log.Println("error: DataFrame is nil")
+		return &DataFrame{}
+	}
+
+	cExprs := make([]*C.CExpr, len(exprs))
+	for i, expr := range exprs {
+		cExprs[i] = expr.ptr
+	}
+
+	cExprsPtr := (**C.CExpr)(unsafe.Pointer(&cExprs[0]))
+	cExprsLen := C.int(len(exprs))
+
+	newDfPtr := C.select_columns(df.ptr, cExprsPtr, cExprsLen)
+
+	if newDfPtr == nil {
+		log.Printf("error: %s", errors.New(C.GoString(C.get_last_error_message())))
+		return &DataFrame{}
+	}
+
+	return &DataFrame{ptr: (*C.CDataFrame)(newDfPtr)}
+}
+
 // Col creates a new expression representing a column.
 func Col(name string) Expr {
 	cName := C.CString(name)
