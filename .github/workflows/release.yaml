@@ -26,59 +26,59 @@ jobs:
           draft: false
           prerelease: false
 
-  build-release:
-    needs: create-release
-    timeout-minutes: 60
-    name: Build Release - ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            artifact_name: libpolars_go.so
-            asset_name: libpolars_go-linux-amd64.so
-          # - os: windows-latest
-          #   artifact_name: polars_go.dll
-          #   asset_name: polars_go-windows-amd64.dll
-          # - os: macos-latest
-          #   artifact_name: libpolars_go.dylib
-          #   asset_name: libpolars_go-darwin-amd64.dylib
+  # build-release:
+  #   needs: create-release
+  #   timeout-minutes: 60
+  #   name: Build Release - ${{ matrix.os }}
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     matrix:
+  #       include:
+  #         - os: ubuntu-latest
+  #           artifact_name: libpolars_go.so
+  #           asset_name: libpolars_go-linux-amd64.so
+  #         # - os: windows-latest
+  #         #   artifact_name: polars_go.dll
+  #         #   asset_name: polars_go-windows-amd64.dll
+  #         # - os: macos-latest
+  #         #   artifact_name: libpolars_go.dylib
+  #         #   asset_name: libpolars_go-darwin-amd64.dylib
 
-    steps:
-      - uses: actions/checkout@v3
+  #   steps:
+  #     - uses: actions/checkout@v3
 
-      - name: Cache Cargo registry
-        uses: actions/cache@v3
-        with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
+  #     - name: Cache Cargo registry
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: ~/.cargo/registry
+  #         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-cargo-
 
-      - name: Cache Cargo build
-        uses: actions/cache@v3
-        with:
-          path: ./polars/bindings/target
-          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-build-
+  #     - name: Cache Cargo build
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: ./polars/bindings/target
+  #         key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-cargo-build-
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+  #     - name: Install Rust
+  #       uses: actions-rs/toolchain@v1
+  #       with:
+  #         toolchain: stable
 
-      - name: Build
-        run: |
-          cd polars/bindings
-          cargo build
+  #     - name: Build
+  #       run: |
+  #         cd polars/bindings
+  #         cargo build
 
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./polars/bindings/target/debug/${{ matrix.artifact_name }}
-          asset_name: ${{ matrix.asset_name }}
-          asset_content_type: application/octet-stream
+  #     - name: Upload Release Asset
+  #       uses: actions/upload-release-asset@v1
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       with:
+  #         upload_url: ${{ needs.create-release.outputs.upload_url }}
+  #         asset_path: ./polars/bindings/target/debug/${{ matrix.artifact_name }}
+  #         asset_name: ${{ matrix.asset_name }}
+  #         asset_content_type: application/octet-stream

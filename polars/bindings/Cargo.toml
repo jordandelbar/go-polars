@@ -9,3 +9,6 @@ crate-type = ["cdylib"]
 [dependencies]
 polars = { version = "0.46", features = ["csv", "polars-io", "lazy"] }
 lazy_static = "1.5"
+
+[profile.release]
+strip = true
