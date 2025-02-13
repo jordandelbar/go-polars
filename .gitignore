@@ -28,6 +28,7 @@ Cargo.lock
 *.exe~
 *.dll
 *.so
+!polars/bin/*.so
 *.dylib
 
 # Test binary, built with `go test -c`
