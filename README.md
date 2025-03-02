@@ -21,4 +21,8 @@ sudo apt-get install build-essential
 make local-build
 make run-basic-example
 ```
+
+## License
+...
+
 ---
