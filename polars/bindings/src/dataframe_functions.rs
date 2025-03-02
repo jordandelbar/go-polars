@@ -1,5 +1,5 @@
 use crate::conversions::*;
-use crate::{set_last_error, LAST_ERROR};
+use crate::{set_last_error};
 use polars::prelude::*;
 use std::cell::RefCell;
 use std::ffi::{c_int, CStr, CString};
@@ -14,7 +14,7 @@ pub extern "C" fn read_csv(path: *const c_char) -> *mut CDataFrame {
     let path_str = match c_str.to_str() {
         Ok(s) => s,
         Err(_) => {
-            *LAST_ERROR.lock().unwrap() = Some("Invalid UTF-8 path".to_string());
+            set_last_error("Invalid UTF-8 path");
             return ptr::null_mut();
         }
     };
@@ -25,8 +25,8 @@ pub extern "C" fn read_csv(path: *const c_char) -> *mut CDataFrame {
     {
         Ok(df) => polars_df_to_c_df(df),
         Err(e) => {
-            *LAST_ERROR.lock().unwrap() = Some(format!("Failed to read CSV: {}", e));
-            ptr::null_mut()
+            set_last_error(&format!("Failed to read CSV: {}", e));
+            return ptr::null_mut()
         }
     }
 }
@@ -38,7 +38,7 @@ pub extern "C" fn read_parquet(path: *const c_char) -> *mut CDataFrame {
         let path_str = match c_str.to_str() {
             Ok(s) => s,
             Err(_) => {
-                *LAST_ERROR.lock().unwrap() = Some("Invalid UTF-8 path".to_string());
+                set_last_error("Invalid UTF-8 path");
                 return ptr::null_mut();
             }
         };
@@ -46,18 +46,17 @@ pub extern "C" fn read_parquet(path: *const c_char) -> *mut CDataFrame {
         let file = match File::open(path_str) {
             Ok(f) => f,
             Err(e) => {
-                *LAST_ERROR.lock().unwrap() = Some(format!("Failed to open file: {}", e));
+                set_last_error(&format!("Failed to open file: {}", e));
                 return ptr::null_mut();
             }
         };
 
         let parquet_reader = ParquetReader::new(file);
-
         match parquet_reader.finish() {
             Ok(df) => polars_df_to_c_df(df),
             Err(e) => {
-                *LAST_ERROR.lock().unwrap() = Some(format!("Failed to read Parquet: {}", e));
-                ptr::null_mut()
+                set_last_error(&format!("Failed to read Parquet: {}", e));
+                return ptr::null_mut()
             }
         }
     }
@@ -69,25 +68,25 @@ pub extern "C" fn free_dataframe(df: *mut CDataFrame) {
         if df.is_null() {
             return;
         }
-
         let c_df = Box::from_raw(df);
-        drop(Box::from_raw(c_df.inner as *mut Rc<RefCell<DataFrame>>));
-        drop(c_df);
+        if !c_df.inner.is_null() {
+                drop(Box::from_raw(c_df.inner as *mut Rc<RefCell<DataFrame>>));
+                drop(c_df);
+        }
     }
 }
 
 #[no_mangle]
 pub extern "C" fn print_dataframe(df_ptr: *mut CDataFrame) -> *const c_char {
     unsafe {
-        let df_result = c_df_to_polars_df(df_ptr);
-        match df_result {
+        match c_df_to_polars_df(df_ptr) {
             Ok(rc_df) => {
                 let df = rc_df.borrow();
                 let df_str = format!("{}", df);
                 CString::new(df_str).unwrap().into_raw()
             }
             Err(e) => {
-                *LAST_ERROR.lock().unwrap() = Some(format!("Print DataFrame error: {}", e));
+                set_last_error(&format!("Print DataFrame error: {}", e));
                 ptr::null()
             }
         }
@@ -98,10 +97,7 @@ pub extern "C" fn print_dataframe(df_ptr: *mut CDataFrame) -> *const c_char {
 pub extern "C" fn dataframe_width(df: *const CDataFrame) -> usize {
     unsafe {
         match c_df_to_polars_df_ref(df) {
-            Ok(rc_df) => {
-                let df = rc_df.borrow();
-                df.width()
-            }
+            Ok(rc_df) => rc_df.borrow().width(),
             Err(_) => 0,
         }
     }
@@ -111,10 +107,7 @@ pub extern "C" fn dataframe_width(df: *const CDataFrame) -> usize {
 pub extern "C" fn dataframe_height(df: *const CDataFrame) -> usize {
     unsafe {
         match c_df_to_polars_df_ref(df) {
-            Ok(rc_df) => {
-                let df = rc_df.borrow();
-                df.height()
-            }
+            Ok(rc_df) => rc_df.borrow().height(),
             Err(_) => 0,
         }
     }
@@ -136,7 +129,7 @@ pub extern "C" fn columns(df_ptr: *mut CDataFrame) -> *const c_char {
                 CString::new(joined_names).unwrap().into_raw()
             }
             Err(e) => {
-                *LAST_ERROR.lock().unwrap() = Some(format!("Columns error: {}", e));
+                set_last_error(&format!("Columns error: {}", e));
                 ptr::null()
             }
         }
@@ -151,21 +144,14 @@ pub extern "C" fn dataframe_column_name(df: *const CDataFrame, index: usize) -> 
                 let df = rc_df.borrow_mut();
                 let names = df.get_column_names();
                 if index < names.len() {
-                    let name = names[index];
-                    match CString::new(name.as_str()) {
-                        Ok(c_string) => c_string.into_raw(),
-                        Err(e) => {
-                            *LAST_ERROR.lock().unwrap() =
-                                Some(format!("Error converting column name: {}", e));
-                            ptr::null()
-                        }
-                    }
+                    CString::new(names[index].as_str()).unwrap().into_raw()
                 } else {
+                    set_last_error("Index out of bounds for column names");
                     ptr::null()
                 }
             }
             Err(e) => {
-                *LAST_ERROR.lock().unwrap() = Some(format!("Error getting column name: {}", e));
+                set_last_error(&format!("Error getting column name: {}", e));
                 ptr::null()
             }
         }
@@ -178,14 +164,18 @@ pub extern "C" fn filter(df_ptr: *mut CDataFrame, expr_ptr: *mut CExpr) -> *mut 
         match (c_df_to_polars_df(df_ptr), c_expr_to_expr(expr_ptr)) {
             (Ok(rc_df), Ok(expr)) => {
                 let df = rc_df.borrow_mut();
-                let filtered_df = match df.clone().lazy().filter(expr.clone()).collect() {
-                    Ok(df) => df,
-                    Err(_) => return std::ptr::null_mut(),
-                };
-
-                polars_df_to_c_df(filtered_df)
+                match df.clone().lazy().filter(expr.clone()).collect() {
+                    Ok(filtered_df) => polars_df_to_c_df(filtered_df),
+                    Err(e) => {
+                        set_last_error(&format!("Filter error: {}", e));
+                        ptr::null_mut()
+                    }
+                }
             }
-            _ => ptr::null_mut(),
+            _ => {
+                set_last_error("Error converting DataFrame or expression");
+                ptr::null_mut()
+            }
         }
     }
 }
@@ -201,8 +191,8 @@ pub extern "C" fn head(df_ptr: *mut CDataFrame, n: usize) -> *mut CDataFrame {
                 return polars_df_to_c_df(head_df);
             }
             Err(e) => {
-                *LAST_ERROR.lock().unwrap() = Some(format!("Error getting head: {}", e));
-                ptr::null_mut()
+                set_last_error(&format!("Error getting head: {}", e));
+                return ptr::null_mut()
             }
         }
     }
@@ -211,29 +201,32 @@ pub extern "C" fn head(df_ptr: *mut CDataFrame, n: usize) -> *mut CDataFrame {
 #[no_mangle]
 pub extern "C" fn write_csv(df_ptr: *mut CDataFrame, file_path: *const c_char) -> *const c_char {
     unsafe {
-        let df_result = c_df_to_polars_df(df_ptr);
-        match df_result {
+        match c_df_to_polars_df(df_ptr) {
             Ok(rc_df) => {
-                let path_str = CStr::from_ptr(file_path).to_str().unwrap();
+
+                let path_str = match CStr::from_ptr(file_path).to_str() {
+                    Ok(s) => s,
+                    Err(_) => {
+                        set_last_error("Invalid UTF-8 file path");
+                        return ptr::null();
+                    }
+                };
+
                 let df = rc_df.borrow_mut();
                 let mut df_clone = df.clone();
 
                 match File::create(path_str) {
-                    Ok(mut file) => {
-                        let mut writer = CsvWriter::new(&mut file);
-                        match writer.finish(&mut df_clone) {
-                            Ok(_) => CString::new("CSV written successfully").unwrap().into_raw(),
-                            Err(e) => {
-                                *LAST_ERROR.lock().unwrap() =
-                                    Some(format!("Error writing CSV: {}", e));
-                                CString::new(format!("Error writing CSV: {}", e))
-                                    .unwrap()
-                                    .into_raw()
-                            }
+                    Ok(mut file) => match CsvWriter::new(&mut file).finish(&mut df_clone) {
+                        Ok(_) => CString::new("CSV written successfully").unwrap().into_raw(),
+                        Err(e) => {
+                            set_last_error(&format!("Error writing CSV: {}", e));
+                            CString::new(format!("Error writing CSV: {}", e))
+                                .unwrap()
+                                .into_raw()
                         }
-                    }
+                    },
                     Err(e) => {
-                        *LAST_ERROR.lock().unwrap() = Some(format!("Error creating file: {}", e));
+                        set_last_error(&format!("Error creating file: {}", e));
                         CString::new(format!("Error creating file: {}", e))
                             .unwrap()
                             .into_raw()
@@ -241,7 +234,7 @@ pub extern "C" fn write_csv(df_ptr: *mut CDataFrame, file_path: *const c_char) -
                 }
             }
             Err(e) => {
-                *LAST_ERROR.lock().unwrap() = Some(format!("Error in write_csv: {}", e));
+                set_last_error(&format!("Error in write_csv: {}", e));
                 CString::new(format!("Error in write_csv: {}", e))
                     .unwrap()
                     .into_raw()
@@ -256,12 +249,12 @@ pub extern "C" fn write_parquet(
     file_path: *const c_char,
 ) -> *const c_char {
     unsafe {
-        let c_str = CStr::from_ptr(file_path);
-        let path_str = match c_str.to_str() {
+
+        let path_str = match CStr::from_ptr(file_path).to_str() {
             Ok(s) => s,
             Err(_) => {
-                *LAST_ERROR.lock().unwrap() = Some("Invalid UTF-8 path".to_string());
-                return ptr::null_mut();
+                set_last_error("Invalid UTF-8 path");
+                return ptr::null();
             }
         };
 
@@ -271,7 +264,7 @@ pub extern "C" fn write_parquet(
                 let file = match File::create(path_str) {
                     Ok(f) => f,
                     Err(e) => {
-                        *LAST_ERROR.lock().unwrap() = Some(format!("Failed to create file: {}", e));
+                        set_last_error(&format!("Failed to create file: {}", e));
                         return ptr::null_mut();
                     }
                 };
@@ -283,8 +276,7 @@ pub extern "C" fn write_parquet(
                         .unwrap()
                         .into_raw(),
                     Err(e) => {
-                        *LAST_ERROR.lock().unwrap() =
-                            Some(format!("Failed to write Parquet: {}", e));
+                        set_last_error(&format!("Failed to write Parquet: {}", e));
                         CString::new(format!("Failed to write Parquet: {}", e))
                             .unwrap()
                             .into_raw()
@@ -292,8 +284,8 @@ pub extern "C" fn write_parquet(
                 }
             }
             Err(e) => {
-                *LAST_ERROR.lock().unwrap() = Some(format!("Error getting DataFrame: {}", e));
-                ptr::null_mut()
+                set_last_error(&format!("Error getting DataFrame: {}", e));
+                return ptr::null_mut();
             }
         }
     }
@@ -308,37 +300,36 @@ pub extern "C" fn with_columns(
     unsafe {
         match c_df_to_polars_df(df_ptr) {
             Ok(rc_df) => {
-                let mut exprs: Vec<Expr> = Vec::new();
+
                 let exprs_slice = std::slice::from_raw_parts(exprs_ptr, exprs_len as usize);
+                let mut exprs: Vec<Expr> = Vec::with_capacity(exprs_len as usize);
 
                 for &expr_ptr in exprs_slice {
                     match c_expr_to_expr(expr_ptr) {
                         Ok(expr) => exprs.push(expr.clone()),
                         Err(e) => {
-                            *LAST_ERROR.lock().unwrap() =
-                                Some(format!("Error converting expr: {}", e));
+                            set_last_error(&format!("Error converting expr: {}", e));
                             return ptr::null_mut();
                         }
                     }
                 }
 
                 let df = rc_df.borrow();
-                let mut lazy_df = df.clone().lazy();
+                let mut lazy_df = df.clone().lazy().with_columns(&exprs);
                 for expr in exprs {
                     lazy_df = lazy_df.with_column(expr);
                 }
 
-                let new_df = match lazy_df.collect() {
-                    Ok(df) => df,
+                match lazy_df.collect() {
+                    Ok(new_df) => polars_df_to_c_df(new_df),
                     Err(e) => {
-                        *LAST_ERROR.lock().unwrap() = Some(format!("Error with_columns: {}", e));
-                        return ptr::null_mut();
+                        set_last_error(&format!("Error with_columns: {}", e));
+                        ptr::null_mut()
                     }
-                };
-                polars_df_to_c_df(new_df)
+                }
             }
             Err(e) => {
-                *LAST_ERROR.lock().unwrap() = Some(format!("Error in with_columns: {}", e));
+                set_last_error(&format!("Error in with_columns: {}", e));
                 ptr::null_mut()
             }
         }

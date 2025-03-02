@@ -1,26 +1,27 @@
 use polars::prelude::*;
 use std::cell::RefCell;
+use std::ffi::c_void;
 use std::rc::Rc;
 
 #[repr(C)]
 pub struct CDataFrame {
-    pub inner: *mut std::ffi::c_void,
+    pub inner: *mut c_void,
 }
 
 #[repr(C)]
 pub struct CExpr {
-    pub inner: *mut std::ffi::c_void,
+    pub inner: *mut c_void,
 }
 
 #[repr(C)]
 pub struct CGroupBy {
-    pub inner: *mut std::ffi::c_void,
+    pub inner: *mut c_void,
 }
 
 pub fn polars_df_to_c_df(df: DataFrame) -> *mut CDataFrame {
     let rc_df = Rc::new(RefCell::new(df));
     let boxed_df = Box::new(rc_df);
-    let inner = Box::into_raw(boxed_df) as *mut std::ffi::c_void;
+    let inner = Box::into_raw(boxed_df) as *mut c_void;
     let c_df = CDataFrame { inner };
     Box::into_raw(Box::new(c_df))
 }
@@ -45,7 +46,7 @@ pub unsafe fn c_df_to_polars_df_ref(
 
 pub fn expr_to_c_expr(expr: Expr) -> *mut CExpr {
     let boxed_expr = Box::new(expr);
-    let ptr = Box::into_raw(boxed_expr) as *mut std::ffi::c_void;
+    let ptr = Box::into_raw(boxed_expr) as *mut c_void;
     let c_expr = CExpr { inner: ptr };
     Box::into_raw(Box::new(c_expr))
 }
@@ -62,7 +63,7 @@ pub unsafe fn c_expr_to_expr(c_expr: *mut CExpr) -> Result<Expr, String> {
 
 pub fn groupby_to_c_groupby(gb: LazyGroupBy) -> *mut CGroupBy {
     let boxed_gb = Box::new(gb);
-    let inner = Box::into_raw(boxed_gb) as *mut std::ffi::c_void;
+    let inner = Box::into_raw(boxed_gb) as *mut c_void;
     let c_gb = CGroupBy { inner };
     Box::into_raw(Box::new(c_gb))
 }
