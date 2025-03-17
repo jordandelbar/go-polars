@@ -27,6 +27,10 @@ type Expr struct {
 	ptr *C.CExpr
 }
 
+type RowIterator struct {
+    ptr *C.CIterator
+}
+
 func (e Expr) Alias(name string) Expr {
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
@@ -167,6 +171,52 @@ func (df *DataFrame) WithColumns(exprs ...Expr) *DataFrame {
 
 	return &DataFrame{ptr: (*C.CDataFrame)(newDfPtr)}
 }
+
+func (df *DataFrame) IterRows() *RowIterator {
+	if df.ptr == nil{
+		return nil
+	}
+
+	return &RowIterator{
+		ptr: C.dataframe_iter(df.ptr),
+	}
+}
+
+func (it *RowIterator) Next() ([]byte, bool){
+	if it.ptr == nil {
+        return []byte(""), false
+    }
+
+	cStr := C.iter_next(it.ptr)
+	if cStr == nil {
+        return []byte(""), false
+    }
+
+	defer C.free(unsafe.Pointer(cStr))
+	return []byte(C.GoString(cStr)), true
+}
+
+func (it *RowIterator) NextJson() (string, bool) {
+    if it.ptr == nil {
+        return "", false
+    }
+
+    cStr := C.iter_next_json(it.ptr)
+    if cStr == nil {
+        return "", false
+    }
+
+    defer C.free(unsafe.Pointer(cStr))
+    return C.GoString(cStr), true
+}
+
+func (it *RowIterator) Free() {
+    if it.ptr != nil {
+        C.free_iterator(it.ptr)
+        it.ptr = nil
+    }
+}
+
 
 // Lit creates a literal expression.
 func Lit(value interface{}) Expr {

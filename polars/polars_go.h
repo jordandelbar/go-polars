@@ -16,6 +16,10 @@ typedef struct CGroupBy {
   void* handle;
 } CGroupBy;
 
+typedef struct CIterator {
+  void* inner;
+} CIterator;
+
 extern CDataFrame* read_csv(const char* path);
 extern CDataFrame* read_parquet(const char* path);
 extern void free_dataframe(CDataFrame* df);
@@ -43,5 +47,10 @@ extern CExpr* lit_float32(float val);
 extern CExpr* lit_string(const char* val);
 extern CExpr* lit_bool(uint8_t val);
 extern CDataFrame* with_columns(CDataFrame* df, CExpr** exprs_ptr, int exprs_len);
+extern CIterator* dataframe_iter(CDataFrame* df);
+extern const char* iter_next(CIterator* iter);
+extern void free_iterator(CIterator* iter);
+extern const char* iter_next_json(CIterator* iter);
+extern void free_bytes(uint8_t* ptr, size_t len);
 
 #endif
