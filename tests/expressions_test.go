@@ -92,11 +92,11 @@ func TestMathematicalOperations(t *testing.T) {
 		result := df.WithColumns(
 			polars.Col("petal.length").AddValue(1.0).Alias("petal_plus_one"),
 		)
-		
+
 		if result.Height() != df.Height() {
 			t.Error("Result should have same number of rows as original")
 		}
-		
+
 		columns := result.Columns()
 		found := false
 		for _, col := range columns {
@@ -114,7 +114,7 @@ func TestMathematicalOperations(t *testing.T) {
 		result := df.WithColumns(
 			polars.Col("sepal.length").SubValue(0.5).Alias("sepal_minus_half"),
 		)
-		
+
 		if result.Height() != df.Height() {
 			t.Error("Result should have same number of rows as original")
 		}
@@ -124,7 +124,7 @@ func TestMathematicalOperations(t *testing.T) {
 		result := df.WithColumns(
 			polars.Col("petal.width").MulValue(2.0).Alias("petal_width_doubled"),
 		)
-		
+
 		if result.Height() != df.Height() {
 			t.Error("Result should have same number of rows as original")
 		}
@@ -134,7 +134,7 @@ func TestMathematicalOperations(t *testing.T) {
 		result := df.WithColumns(
 			polars.Col("sepal.width").DivValue(2.0).Alias("sepal_width_halved"),
 		)
-		
+
 		if result.Height() != df.Height() {
 			t.Error("Result should have same number of rows as original")
 		}
@@ -144,11 +144,11 @@ func TestMathematicalOperations(t *testing.T) {
 		result := df.WithColumns(
 			polars.Col("petal.length").Add(polars.Col("petal.width")).Alias("petal_sum"),
 		)
-		
+
 		if result.Height() != df.Height() {
 			t.Error("Result should have same number of rows as original")
 		}
-		
+
 		columns := result.Columns()
 		found := false
 		for _, col := range columns {
@@ -166,7 +166,7 @@ func TestMathematicalOperations(t *testing.T) {
 		result := df.WithColumns(
 			polars.Col("sepal.length").Sub(polars.Col("sepal.width")).Alias("sepal_diff"),
 		)
-		
+
 		if result.Height() != df.Height() {
 			t.Error("Result should have same number of rows as original")
 		}
@@ -176,7 +176,7 @@ func TestMathematicalOperations(t *testing.T) {
 		result := df.WithColumns(
 			polars.Col("petal.length").Mul(polars.Col("petal.width")).Alias("petal_area"),
 		)
-		
+
 		if result.Height() != df.Height() {
 			t.Error("Result should have same number of rows as original")
 		}
@@ -186,7 +186,7 @@ func TestMathematicalOperations(t *testing.T) {
 		result := df.WithColumns(
 			polars.Col("sepal.length").Div(polars.Col("sepal.width")).Alias("sepal_ratio"),
 		)
-		
+
 		if result.Height() != df.Height() {
 			t.Error("Result should have same number of rows as original")
 		}
@@ -202,11 +202,11 @@ func TestLogicalOperations(t *testing.T) {
 		result := df.Filter(
 			polars.Col("petal.length").Gt(4).And(polars.Col("petal.width").Gt(1)),
 		)
-		
+
 		if result.Height() == 0 {
 			t.Error("Expected some rows matching both conditions")
 		}
-		
+
 		if result.Height() >= df.Height() {
 			t.Error("AND result should have fewer rows than original")
 		}
@@ -217,7 +217,7 @@ func TestLogicalOperations(t *testing.T) {
 		result := df.Filter(
 			polars.Col("petal.length").Lt(2).Or(polars.Col("petal.width").Gt(2)),
 		)
-		
+
 		if result.Height() == 0 {
 			t.Error("Expected some rows matching either condition")
 		}
@@ -228,11 +228,11 @@ func TestLogicalOperations(t *testing.T) {
 		result := df.Filter(
 			polars.Col("petal.length").Gt(4).Not(),
 		)
-		
+
 		if result.Height() == 0 {
 			t.Error("Expected some rows where petal.length is NOT > 4")
 		}
-		
+
 		if result.Height() >= df.Height() {
 			t.Error("NOT result should have fewer rows than original")
 		}
@@ -250,7 +250,7 @@ func TestComplexExpressions(t *testing.T) {
 				polars.Col("sepal.length").Lt(5),
 			),
 		)
-		
+
 		if result.Height() == 0 {
 			t.Error("Expected some rows matching complex condition")
 		}
@@ -261,11 +261,11 @@ func TestComplexExpressions(t *testing.T) {
 		result := df.WithColumns(
 			polars.Col("petal.length").MulValue(2.0).Add(polars.Col("petal.width")).SubValue(1.0).Alias("complex_calc"),
 		)
-		
+
 		if result.Height() != df.Height() {
 			t.Error("Result should have same number of rows as original")
 		}
-		
+
 		columns := result.Columns()
 		found := false
 		for _, col := range columns {
@@ -286,11 +286,11 @@ func TestComplexExpressions(t *testing.T) {
 			WithColumns(polars.Col("petal.length").MulValue(10.0).Alias("petal_length_mm")).
 			Filter(polars.Col("petal_length_mm").Le(50)).
 			Select(polars.Col("variety"), polars.Col("petal.length"), polars.Col("petal_length_mm"))
-		
+
 		if result.Height() == 0 {
 			t.Error("Expected some rows after chained operations")
 		}
-		
+
 		if result.Width() != 3 {
 			t.Errorf("Expected 3 columns after select, got %d", result.Width())
 		}
@@ -304,7 +304,7 @@ func TestEdgeCases(t *testing.T) {
 	t.Run("FilterResultingInEmptyDataFrame", func(t *testing.T) {
 		// Filter that should result in no rows
 		result := df.Filter(polars.Col("petal.length").Gt(100))
-		
+
 		if result.Height() != 0 {
 			t.Error("Expected empty result for impossible condition")
 		}
@@ -316,7 +316,7 @@ func TestEdgeCases(t *testing.T) {
 			Filter(polars.Col("petal.length").Gt(1)).
 			Filter(polars.Col("petal.width").Gt(0)).
 			Filter(polars.Col("sepal.length").Lt(10))
-		
+
 		if result.Height() == 0 {
 			t.Error("Expected some rows after reasonable filters")
 		}
@@ -329,7 +329,7 @@ func TestEdgeCases(t *testing.T) {
 			polars.Col("petal.width").MulValue(2.0).Alias("col2"),
 			polars.Col("sepal.length").SubValue(0.5).Alias("col3"),
 		)
-		
+
 		if result.Width() != df.Width()+3 {
 			t.Errorf("Expected %d columns, got %d", df.Width()+3, result.Width())
 		}
