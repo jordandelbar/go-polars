@@ -1,0 +1,19 @@
+default_install_hook_types: [pre-commit, commit-msg]
+
+repos:
+  - repo: local
+    hooks:
+      - id: validate-commit-msg
+        name: validate-commit-msg
+        language: pygrep
+        entry: ^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert|merge)(!?)(:)\s{1}[A-Z][\w,\W,:]*$
+        stages: [commit-msg]
+        args: [--multiline, --negate]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
