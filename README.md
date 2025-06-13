@@ -82,25 +82,25 @@ import "github.com/jordandelbar/go-polars/polars"
 df, err := polars.ReadCSV("data.csv")
 
 // Comparison operations
-filtered := df.Filter(polars.Col("age").Gt(25))          // Adults only
-equals := df.Filter(polars.Col("score").Eq(100))         // Perfect scores
+filtered := df.Filter(polars.Col("age").Gt(25))
+equals := df.Filter(polars.Col("score").Eq(100))
 
 // Mathematical operations
 df = df.WithColumns(
-    polars.Col("price").MulValue(1.1).Alias("price_with_tax"),  // Add 10% tax
-    polars.Col("length").Add(polars.Col("width")).Alias("perimeter"), // Calculate perimeter
+    polars.Col("price").MulValue(1.1).Alias("price_with_tax"),
+    polars.Col("length").Add(polars.Col("width")).Alias("perimeter"),
 )
 
 // Logical operations
 complex := df.Filter(
-    polars.Col("age").Gt(18).And(polars.Col("score").Ge(80)),  // Adults with good scores
+    polars.Col("age").Gt(18).And(polars.Col("score").Ge(80)),
 )
 
 // Chaining operations
 result := df.
-    Filter(polars.Col("active").Eq(1)).                         // Active users only
-    WithColumns(polars.Col("salary").MulValue(1.05).Alias("new_salary")). // 5% raise
-    Select(polars.Col("name"), polars.Col("new_salary"))        // Select relevant columns
+    Filter(polars.Col("active").Eq(1)).
+    WithColumns(polars.Col("salary").MulValue(1.05).Alias("new_salary")).
+    Select(polars.Col("name"), polars.Col("new_salary"))
 ```
 
 ## 🚀 Examples & Quick Start
