@@ -28,7 +28,6 @@ Cargo.lock
 *.exe~
 *.dll
 *.so
-!polars/bin/*.so
 *.dylib
 
 # Test binary, built with `go test -c`
@@ -47,7 +46,13 @@ go.work.sum
 # env file
 .env
 
-# rust .so library
-!polars/lib/*.so
+# Compiled binaries (users should build these locally)
+polars/bin/libpolars_go.so
+polars/bin/libpolars_go.dylib
+polars/bin/polars_go.dll
+
+# Example outputs
 examples/basic/*.csv
 examples/basic/*.parquet
+examples/expressions/*.csv
+examples/expressions/*.parquet
