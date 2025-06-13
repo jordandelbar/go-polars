@@ -1,6 +1,8 @@
 # 🐹 go-polars ⚡
 
-![Intro](assets/images/go-rust.png)
+<p align="center">
+    <img src="assets/images/go-rust.png" width="300"/>
+</p>
 
 🚀 This project creates Go bindings for the blazing-fast Polars data manipulation library!
 
