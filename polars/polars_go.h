@@ -29,6 +29,11 @@ extern CDataFrame* select_columns(CDataFrame *df, CExpr* *exprs, int exprs_len);
 extern CDataFrame* head(CDataFrame* df, size_t n);
 extern CExpr* col(const char* name);
 extern CExpr* col_gt(CExpr* expr, int64_t value);
+extern CExpr* col_lt(CExpr* expr, int64_t value);
+extern CExpr* col_eq(CExpr* expr, int64_t value);
+extern CExpr* col_ne(CExpr* expr, int64_t value);
+extern CExpr* col_ge(CExpr* expr, int64_t value);
+extern CExpr* col_le(CExpr* expr, int64_t value);
 extern CGroupBy* group_by(CDataFrame* df, const char* columns);
 extern const char* columns(CDataFrame* df);
 extern const char* print_dataframe(CDataFrame* df);
@@ -43,5 +48,16 @@ extern CExpr* lit_float32(float val);
 extern CExpr* lit_string(const char* val);
 extern CExpr* lit_bool(uint8_t val);
 extern CDataFrame* with_columns(CDataFrame* df, CExpr** exprs_ptr, int exprs_len);
+extern CExpr* expr_add(CExpr* left_expr, CExpr* right_expr);
+extern CExpr* expr_sub(CExpr* left_expr, CExpr* right_expr);
+extern CExpr* expr_mul(CExpr* left_expr, CExpr* right_expr);
+extern CExpr* expr_div(CExpr* left_expr, CExpr* right_expr);
+extern CExpr* expr_add_value(CExpr* expr, double value);
+extern CExpr* expr_sub_value(CExpr* expr, double value);
+extern CExpr* expr_mul_value(CExpr* expr, double value);
+extern CExpr* expr_div_value(CExpr* expr, double value);
+extern CExpr* expr_and(CExpr* left_expr, CExpr* right_expr);
+extern CExpr* expr_or(CExpr* left_expr, CExpr* right_expr);
+extern CExpr* expr_not(CExpr* expr);
 
 #endif

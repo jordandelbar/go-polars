@@ -26,6 +26,236 @@ pub extern "C" fn col_gt(expr_ptr: *mut CExpr, value: i64) -> *mut CExpr {
 }
 
 #[no_mangle]
+pub extern "C" fn col_lt(expr_ptr: *mut CExpr, value: i64) -> *mut CExpr {
+    unsafe {
+        let expr_result = c_expr_to_expr(expr_ptr);
+        match expr_result {
+            Ok(expr) => {
+                let new_expr = expr.clone().lt(lit(value));
+                expr_to_c_expr(new_expr)
+            }
+            Err(_) => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn col_eq(expr_ptr: *mut CExpr, value: i64) -> *mut CExpr {
+    unsafe {
+        let expr_result = c_expr_to_expr(expr_ptr);
+        match expr_result {
+            Ok(expr) => {
+                let new_expr = expr.clone().eq(lit(value));
+                expr_to_c_expr(new_expr)
+            }
+            Err(_) => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn col_ne(expr_ptr: *mut CExpr, value: i64) -> *mut CExpr {
+    unsafe {
+        let expr_result = c_expr_to_expr(expr_ptr);
+        match expr_result {
+            Ok(expr) => {
+                let new_expr = expr.clone().neq(lit(value));
+                expr_to_c_expr(new_expr)
+            }
+            Err(_) => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn col_ge(expr_ptr: *mut CExpr, value: i64) -> *mut CExpr {
+    unsafe {
+        let expr_result = c_expr_to_expr(expr_ptr);
+        match expr_result {
+            Ok(expr) => {
+                let new_expr = expr.clone().gt_eq(lit(value));
+                expr_to_c_expr(new_expr)
+            }
+            Err(_) => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn col_le(expr_ptr: *mut CExpr, value: i64) -> *mut CExpr {
+    unsafe {
+        let expr_result = c_expr_to_expr(expr_ptr);
+        match expr_result {
+            Ok(expr) => {
+                let new_expr = expr.clone().lt_eq(lit(value));
+                expr_to_c_expr(new_expr)
+            }
+            Err(_) => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn expr_add(left_expr: *mut CExpr, right_expr: *mut CExpr) -> *mut CExpr {
+    unsafe {
+        let left_result = c_expr_to_expr(left_expr);
+        let right_result = c_expr_to_expr(right_expr);
+        match (left_result, right_result) {
+            (Ok(left), Ok(right)) => {
+                let new_expr = left.clone() + right.clone();
+                expr_to_c_expr(new_expr)
+            }
+            _ => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn expr_sub(left_expr: *mut CExpr, right_expr: *mut CExpr) -> *mut CExpr {
+    unsafe {
+        let left_result = c_expr_to_expr(left_expr);
+        let right_result = c_expr_to_expr(right_expr);
+        match (left_result, right_result) {
+            (Ok(left), Ok(right)) => {
+                let new_expr = left.clone() - right.clone();
+                expr_to_c_expr(new_expr)
+            }
+            _ => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn expr_mul(left_expr: *mut CExpr, right_expr: *mut CExpr) -> *mut CExpr {
+    unsafe {
+        let left_result = c_expr_to_expr(left_expr);
+        let right_result = c_expr_to_expr(right_expr);
+        match (left_result, right_result) {
+            (Ok(left), Ok(right)) => {
+                let new_expr = left.clone() * right.clone();
+                expr_to_c_expr(new_expr)
+            }
+            _ => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn expr_div(left_expr: *mut CExpr, right_expr: *mut CExpr) -> *mut CExpr {
+    unsafe {
+        let left_result = c_expr_to_expr(left_expr);
+        let right_result = c_expr_to_expr(right_expr);
+        match (left_result, right_result) {
+            (Ok(left), Ok(right)) => {
+                let new_expr = left.clone() / right.clone();
+                expr_to_c_expr(new_expr)
+            }
+            _ => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn expr_add_value(expr_ptr: *mut CExpr, value: f64) -> *mut CExpr {
+    unsafe {
+        let expr_result = c_expr_to_expr(expr_ptr);
+        match expr_result {
+            Ok(expr) => {
+                let new_expr = expr.clone() + lit(value);
+                expr_to_c_expr(new_expr)
+            }
+            Err(_) => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn expr_sub_value(expr_ptr: *mut CExpr, value: f64) -> *mut CExpr {
+    unsafe {
+        let expr_result = c_expr_to_expr(expr_ptr);
+        match expr_result {
+            Ok(expr) => {
+                let new_expr = expr.clone() - lit(value);
+                expr_to_c_expr(new_expr)
+            }
+            Err(_) => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn expr_mul_value(expr_ptr: *mut CExpr, value: f64) -> *mut CExpr {
+    unsafe {
+        let expr_result = c_expr_to_expr(expr_ptr);
+        match expr_result {
+            Ok(expr) => {
+                let new_expr = expr.clone() * lit(value);
+                expr_to_c_expr(new_expr)
+            }
+            Err(_) => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn expr_div_value(expr_ptr: *mut CExpr, value: f64) -> *mut CExpr {
+    unsafe {
+        let expr_result = c_expr_to_expr(expr_ptr);
+        match expr_result {
+            Ok(expr) => {
+                let new_expr = expr.clone() / lit(value);
+                expr_to_c_expr(new_expr)
+            }
+            Err(_) => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn expr_and(left_expr: *mut CExpr, right_expr: *mut CExpr) -> *mut CExpr {
+    unsafe {
+        let left_result = c_expr_to_expr(left_expr);
+        let right_result = c_expr_to_expr(right_expr);
+        match (left_result, right_result) {
+            (Ok(left), Ok(right)) => {
+                let new_expr = left.clone().and(right.clone());
+                expr_to_c_expr(new_expr)
+            }
+            _ => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn expr_or(left_expr: *mut CExpr, right_expr: *mut CExpr) -> *mut CExpr {
+    unsafe {
+        let left_result = c_expr_to_expr(left_expr);
+        let right_result = c_expr_to_expr(right_expr);
+        match (left_result, right_result) {
+            (Ok(left), Ok(right)) => {
+                let new_expr = left.clone().or(right.clone());
+                expr_to_c_expr(new_expr)
+            }
+            _ => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn expr_not(expr_ptr: *mut CExpr) -> *mut CExpr {
+    unsafe {
+        let expr_result = c_expr_to_expr(expr_ptr);
+        match expr_result {
+            Ok(expr) => {
+                let new_expr = expr.clone().not();
+                expr_to_c_expr(new_expr)
+            }
+            Err(_) => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
 pub extern "C" fn free_expr(expr: *mut CExpr) {
     unsafe {
         if expr.is_null() {

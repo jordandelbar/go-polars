@@ -135,6 +135,86 @@ func (e Expr) Gt(value int64) Expr {
 	return Expr{ptr: (*C.CExpr)(C.col_gt(e.ptr, C.long(value)))}
 }
 
+// Lt creates a "less than" expression.
+func (e Expr) Lt(value int64) Expr {
+	return Expr{ptr: (*C.CExpr)(C.col_lt(e.ptr, C.long(value)))}
+}
+
+// Eq creates an "equal to" expression.
+func (e Expr) Eq(value int64) Expr {
+	return Expr{ptr: (*C.CExpr)(C.col_eq(e.ptr, C.long(value)))}
+}
+
+// Ne creates a "not equal to" expression.
+func (e Expr) Ne(value int64) Expr {
+	return Expr{ptr: (*C.CExpr)(C.col_ne(e.ptr, C.long(value)))}
+}
+
+// Ge creates a "greater than or equal to" expression.
+func (e Expr) Ge(value int64) Expr {
+	return Expr{ptr: (*C.CExpr)(C.col_ge(e.ptr, C.long(value)))}
+}
+
+// Le creates a "less than or equal to" expression.
+func (e Expr) Le(value int64) Expr {
+	return Expr{ptr: (*C.CExpr)(C.col_le(e.ptr, C.long(value)))}
+}
+
+// Add creates an addition expression between two expressions.
+func (e Expr) Add(other Expr) Expr {
+	return Expr{ptr: (*C.CExpr)(C.expr_add(e.ptr, other.ptr))}
+}
+
+// Sub creates a subtraction expression between two expressions.
+func (e Expr) Sub(other Expr) Expr {
+	return Expr{ptr: (*C.CExpr)(C.expr_sub(e.ptr, other.ptr))}
+}
+
+// Mul creates a multiplication expression between two expressions.
+func (e Expr) Mul(other Expr) Expr {
+	return Expr{ptr: (*C.CExpr)(C.expr_mul(e.ptr, other.ptr))}
+}
+
+// Div creates a division expression between two expressions.
+func (e Expr) Div(other Expr) Expr {
+	return Expr{ptr: (*C.CExpr)(C.expr_div(e.ptr, other.ptr))}
+}
+
+// AddValue creates an addition expression with a numeric value.
+func (e Expr) AddValue(value float64) Expr {
+	return Expr{ptr: (*C.CExpr)(C.expr_add_value(e.ptr, C.double(value)))}
+}
+
+// SubValue creates a subtraction expression with a numeric value.
+func (e Expr) SubValue(value float64) Expr {
+	return Expr{ptr: (*C.CExpr)(C.expr_sub_value(e.ptr, C.double(value)))}
+}
+
+// MulValue creates a multiplication expression with a numeric value.
+func (e Expr) MulValue(value float64) Expr {
+	return Expr{ptr: (*C.CExpr)(C.expr_mul_value(e.ptr, C.double(value)))}
+}
+
+// DivValue creates a division expression with a numeric value.
+func (e Expr) DivValue(value float64) Expr {
+	return Expr{ptr: (*C.CExpr)(C.expr_div_value(e.ptr, C.double(value)))}
+}
+
+// And creates a logical AND expression between two expressions.
+func (e Expr) And(other Expr) Expr {
+	return Expr{ptr: (*C.CExpr)(C.expr_and(e.ptr, other.ptr))}
+}
+
+// Or creates a logical OR expression between two expressions.
+func (e Expr) Or(other Expr) Expr {
+	return Expr{ptr: (*C.CExpr)(C.expr_or(e.ptr, other.ptr))}
+}
+
+// Not creates a logical NOT expression.
+func (e Expr) Not() Expr {
+	return Expr{ptr: (*C.CExpr)(C.expr_not(e.ptr))}
+}
+
 // Head returns the first n rows of the DataFrame.
 func (df DataFrame) Head(n int) *DataFrame {
 	cHeadDf := C.head(df.ptr, C.size_t(n))
