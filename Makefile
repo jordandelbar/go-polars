@@ -18,10 +18,6 @@ run-basic-example:
 
 .PHONY: run-expressions-example
 run-expressions-example:
-	@cd examples/expressions && go run simple_example.go
-
-.PHONY: run-expressions-demo
-run-expressions-demo:
 	@cd examples/expressions && go run .
 
 .PHONY: test

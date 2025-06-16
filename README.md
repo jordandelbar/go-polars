@@ -1,10 +1,10 @@
-# 🐹 go-polars ⚡
+# go-polars
 
 <p align="center">
-    <img src="assets/images/go-rust.png" width="300"/>
+    <img src="docs/assets/images/go-rust.png" width="300"/>
 </p>
 
-🚀 This project creates Go bindings for the blazing-fast Polars data manipulation library!
+This project creates Go bindings for the Polars data manipulation library!
 
 ## 🤔 What is Polars?
 Polars is an open-source library for data manipulation, known for being one of the fastest data processing solutions on a single machine. It features a well-structured, typed API that is both expressive and easy to use.
@@ -23,7 +23,7 @@ https://github.com/pola-rs/polars
   ```bash
   sudo apt-get install build-essential  # Ubuntu/Debian
   # or
-  sudo dnf install make automake gcc gcc-c++ kernel-devel   # CentOS/RHEL
+  sudo dnf install make automake gcc gcc-c++ kernel-devel   # Fedora/CentOS/RHEL
   ```
 
 ### Quick Start
@@ -44,11 +44,12 @@ make run-basic-example
 ```
 
 ### Why Build Locally?
-We **don't include pre-compiled binaries** in the repository because:
+We don't include pre-compiled binaries in the repository because:
 - 🔒 **Security**: You build from source you can trust
 - 🖥️ **Platform support**: Works on Linux, macOS, and Windows
 - 📦 **Smaller repo**: No 40MB+ binary files
-- 🔄 **Always up-to-date**: Latest optimizations for your system
+
+We aim to provide pre-compiled binary in the future.
 
 ## ✨ Features
 
@@ -113,13 +114,7 @@ Get started with simple DataFrame operations:
 make run-basic-example
 ```
 
-### Expression Operations Demo
-Try out all the new comparison, mathematical, and logical operations:
-```bash
-cd examples/expressions && go run simple_example.go
-```
-
-### Comprehensive Demo
+### Expression Example
 Run the full-featured example with complex operations:
 ```bash
 make run-expressions-demo
@@ -132,14 +127,6 @@ make run-expressions-demo
 - `make run-expressions-demo` - Run comprehensive feature demo
 
 ## 🧪 Testing
-
-This project includes comprehensive test coverage:
-
-- **📊 DataFrame Operations**: Basic operations, filtering, selection
-- **🔧 Expression Operations**: All comparison, mathematical, and logical operations
-- **💾 I/O Operations**: CSV and Parquet read/write with error handling
-- **🔗 Complex Scenarios**: Chained operations, edge cases, memory management
-- **⚡ Performance**: Benchmarks for critical operations
 
 ```bash
 # Run all tests
@@ -157,12 +144,10 @@ make test-coverage
 
 ## 🤝 Contributing
 
-1. **Fork** the repository
-2. **Build** locally: `./build.sh`
-3. **Test** your changes: `make test`
-4. **Submit** a pull request
+1. Fork the repository
+2. Build locally: `./build.sh`
+3. Test your changes: `make test`
+4. Submit a pull request
 
 ## 📄 License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
----

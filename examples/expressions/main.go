@@ -9,7 +9,7 @@ import (
 
 func main() {
 	// Load the iris dataset
-	irisDf, err := polars.ReadCSV("../../testdata/iris.csv")
+	irisDf, err := polars.ReadCSV("../data/iris.csv")
 	if err != nil {
 		panic(err)
 	}
@@ -127,9 +127,9 @@ func main() {
 
 	// Chain multiple operations together
 	chainedDf := irisDf.
-		Filter(polars.Col("petal.length").Gt(1)).                    // Filter first
+		Filter(polars.Col("petal.length").Gt(1)).                                        // Filter first
 		WithColumns(polars.Col("petal.length").MulValue(10.0).Alias("petal_length_mm")). // Convert to mm
-		Filter(polars.Col("petal_length_mm").Le(50)).                // Filter again
+		Filter(polars.Col("petal_length_mm").Le(50)).                                    // Filter again
 		Select(polars.Col("variety"), polars.Col("petal.length"), polars.Col("petal_length_mm"))
 
 	fmt.Printf("Chained operations result: %d rows\n", chainedDf.Height())
