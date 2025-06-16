@@ -52,7 +52,6 @@ polars/bin/libpolars_go.dylib
 polars/bin/polars_go.dll
 
 # Example outputs
-examples/basic/*.csv
-examples/basic/*.parquet
-examples/expressions/*.csv
-examples/expressions/*.parquet
+examples/**/*.csv
+examples/**/*.parquet
+!examples/data/*.csv
