@@ -493,3 +493,137 @@ func (e Expr) Std() Expr {
 func Count() Expr {
 	return Expr{ptr: (*C.CExpr)(C.expr_count())}
 }
+
+// Sort sorts the DataFrame by one or more columns in ascending order.
+func (df *DataFrame) Sort(columns ...string) *DataFrame {
+	if df.ptr == nil {
+		log.Println("error: DataFrame is nil")
+		return &DataFrame{}
+	}
+
+	// Join column names with comma separator
+	columnsStr := ""
+	for i, col := range columns {
+		if i > 0 {
+			columnsStr += ","
+		}
+		columnsStr += col
+	}
+
+	cColumns := C.CString(columnsStr)
+	defer C.free(unsafe.Pointer(cColumns))
+
+	// All ascending (false for descending)
+	descendingStr := ""
+	for i := range columns {
+		if i > 0 {
+			descendingStr += ","
+		}
+		descendingStr += "false"
+	}
+
+	cDescending := C.CString(descendingStr)
+	defer C.free(unsafe.Pointer(cDescending))
+
+	sortedPtr := C.sort_by_columns(df.ptr, cColumns, cDescending)
+	if sortedPtr == nil {
+		log.Printf("error: %s", errors.New(C.GoString(C.get_last_error_message())))
+		return &DataFrame{}
+	}
+
+	return &DataFrame{ptr: (*C.CDataFrame)(sortedPtr)}
+}
+
+// SortBy sorts the DataFrame by one or more columns with specified sort orders.
+func (df *DataFrame) SortBy(columns []string, descending []bool) *DataFrame {
+	if df.ptr == nil {
+		log.Println("error: DataFrame is nil")
+		return &DataFrame{}
+	}
+
+	if len(columns) != len(descending) {
+		log.Println("error: columns and descending arrays must have the same length")
+		return &DataFrame{}
+	}
+
+	// Join column names with comma separator
+	columnsStr := ""
+	for i, col := range columns {
+		if i > 0 {
+			columnsStr += ","
+		}
+		columnsStr += col
+	}
+
+	cColumns := C.CString(columnsStr)
+	defer C.free(unsafe.Pointer(cColumns))
+
+	// Build descending string
+	descendingStr := ""
+	for i, desc := range descending {
+		if i > 0 {
+			descendingStr += ","
+		}
+		if desc {
+			descendingStr += "true"
+		} else {
+			descendingStr += "false"
+		}
+	}
+
+	cDescending := C.CString(descendingStr)
+	defer C.free(unsafe.Pointer(cDescending))
+
+	sortedPtr := C.sort_by_columns(df.ptr, cColumns, cDescending)
+	if sortedPtr == nil {
+		log.Printf("error: %s", errors.New(C.GoString(C.get_last_error_message())))
+		return &DataFrame{}
+	}
+
+	return &DataFrame{ptr: (*C.CDataFrame)(sortedPtr)}
+}
+
+// SortByExprs sorts the DataFrame by expressions with specified sort orders.
+func (df *DataFrame) SortByExprs(exprs []Expr, descending []bool) *DataFrame {
+	if df.ptr == nil {
+		log.Println("error: DataFrame is nil")
+		return &DataFrame{}
+	}
+
+	if len(exprs) != len(descending) {
+		log.Println("error: exprs and descending arrays must have the same length")
+		return &DataFrame{}
+	}
+
+	cExprs := make([]*C.CExpr, len(exprs))
+	for i, expr := range exprs {
+		cExprs[i] = expr.ptr
+	}
+
+	cExprsPtr := (**C.CExpr)(unsafe.Pointer(&cExprs[0]))
+	cExprsLen := C.int(len(exprs))
+
+	// Build descending string
+	descendingStr := ""
+	for i, desc := range descending {
+		if i > 0 {
+			descendingStr += ","
+		}
+		if desc {
+			descendingStr += "true"
+		} else {
+			descendingStr += "false"
+		}
+	}
+
+	cDescending := C.CString(descendingStr)
+	defer C.free(unsafe.Pointer(cDescending))
+
+	sortedPtr := C.sort_by_exprs(df.ptr, cExprsPtr, cExprsLen, cDescending)
+	if sortedPtr == nil {
+		log.Printf("error: %s", errors.New(C.GoString(C.get_last_error_message())))
+		return &DataFrame{}
+	}
+
+	return &DataFrame{ptr: (*C.CDataFrame)(sortedPtr)}
+}

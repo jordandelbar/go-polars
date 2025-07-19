@@ -1,5 +1,5 @@
 use crate::conversions::*;
-use crate::{set_last_error};
+use crate::set_last_error;
 use polars::prelude::*;
 use std::cell::RefCell;
 use std::ffi::{c_int, CStr, CString};
@@ -26,7 +26,7 @@ pub extern "C" fn read_csv(path: *const c_char) -> *mut CDataFrame {
         Ok(df) => polars_df_to_c_df(df),
         Err(e) => {
             set_last_error(&format!("Failed to read CSV: {}", e));
-            return ptr::null_mut()
+            return ptr::null_mut();
         }
     }
 }
@@ -56,7 +56,7 @@ pub extern "C" fn read_parquet(path: *const c_char) -> *mut CDataFrame {
             Ok(df) => polars_df_to_c_df(df),
             Err(e) => {
                 set_last_error(&format!("Failed to read Parquet: {}", e));
-                return ptr::null_mut()
+                return ptr::null_mut();
             }
         }
     }
@@ -70,8 +70,8 @@ pub extern "C" fn free_dataframe(df: *mut CDataFrame) {
         }
         let c_df = Box::from_raw(df);
         if !c_df.inner.is_null() {
-                drop(Box::from_raw(c_df.inner as *mut Rc<RefCell<DataFrame>>));
-                drop(c_df);
+            drop(Box::from_raw(c_df.inner as *mut Rc<RefCell<DataFrame>>));
+            drop(c_df);
         }
     }
 }
@@ -192,7 +192,7 @@ pub extern "C" fn head(df_ptr: *mut CDataFrame, n: usize) -> *mut CDataFrame {
             }
             Err(e) => {
                 set_last_error(&format!("Error getting head: {}", e));
-                return ptr::null_mut()
+                return ptr::null_mut();
             }
         }
     }
@@ -203,7 +203,6 @@ pub extern "C" fn write_csv(df_ptr: *mut CDataFrame, file_path: *const c_char) -
     unsafe {
         match c_df_to_polars_df(df_ptr) {
             Ok(rc_df) => {
-
                 let path_str = match CStr::from_ptr(file_path).to_str() {
                     Ok(s) => s,
                     Err(_) => {
@@ -249,7 +248,6 @@ pub extern "C" fn write_parquet(
     file_path: *const c_char,
 ) -> *const c_char {
     unsafe {
-
         let path_str = match CStr::from_ptr(file_path).to_str() {
             Ok(s) => s,
             Err(_) => {
@@ -300,7 +298,6 @@ pub extern "C" fn with_columns(
     unsafe {
         match c_df_to_polars_df(df_ptr) {
             Ok(rc_df) => {
-
                 let exprs_slice = std::slice::from_raw_parts(exprs_ptr, exprs_len as usize);
                 let mut exprs: Vec<Expr> = Vec::with_capacity(exprs_len as usize);
 
@@ -373,6 +370,159 @@ pub extern "C" fn select_columns(
             Err(e) => {
                 set_last_error(&format!("Error getting DataFrame: {}", e));
                 return ptr::null_mut();
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn sort_by_columns(
+    df_ptr: *mut CDataFrame,
+    columns: *const c_char,
+    descending: *const c_char,
+) -> *mut CDataFrame {
+    unsafe {
+        match c_df_to_polars_df(df_ptr) {
+            Ok(rc_df) => {
+                let columns_str = match CStr::from_ptr(columns).to_str() {
+                    Ok(s) => s,
+                    Err(_) => {
+                        set_last_error("Invalid UTF-8 columns string");
+                        return ptr::null_mut();
+                    }
+                };
+
+                let descending_str = match CStr::from_ptr(descending).to_str() {
+                    Ok(s) => s,
+                    Err(_) => {
+                        set_last_error("Invalid UTF-8 descending string");
+                        return ptr::null_mut();
+                    }
+                };
+
+                let column_names: Vec<&str> = if columns_str.is_empty() {
+                    vec![]
+                } else {
+                    columns_str.split(',').collect()
+                };
+
+                let descending_flags: Vec<&str> = if descending_str.is_empty() {
+                    vec![]
+                } else {
+                    descending_str.split(',').collect()
+                };
+
+                if column_names.len() != descending_flags.len() {
+                    set_last_error("Columns and descending arrays must have the same length");
+                    return ptr::null_mut();
+                }
+
+                let df = rc_df.borrow();
+
+                if column_names.is_empty() {
+                    // No columns to sort by, return original DataFrame
+                    return polars_df_to_c_df(df.clone());
+                }
+
+                let mut sort_exprs: Vec<Expr> = Vec::new();
+                let mut sort_options: Vec<bool> = Vec::new();
+
+                for (i, col_name) in column_names.iter().enumerate() {
+                    let desc = descending_flags[i] == "true";
+                    sort_exprs.push(col(*col_name));
+                    sort_options.push(desc);
+                }
+
+                match df
+                    .clone()
+                    .lazy()
+                    .sort_by_exprs(
+                        &sort_exprs,
+                        SortMultipleOptions::default().with_order_descending_multi(sort_options),
+                    )
+                    .collect()
+                {
+                    Ok(sorted_df) => polars_df_to_c_df(sorted_df),
+                    Err(e) => {
+                        set_last_error(&format!("Sort error: {}", e));
+                        ptr::null_mut()
+                    }
+                }
+            }
+            Err(e) => {
+                set_last_error(&format!("Error getting DataFrame: {}", e));
+                ptr::null_mut()
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn sort_by_exprs(
+    df_ptr: *mut CDataFrame,
+    exprs_ptr: *mut *mut CExpr,
+    exprs_len: c_int,
+    descending: *const c_char,
+) -> *mut CDataFrame {
+    unsafe {
+        match c_df_to_polars_df(df_ptr) {
+            Ok(rc_df) => {
+                let descending_str = match CStr::from_ptr(descending).to_str() {
+                    Ok(s) => s,
+                    Err(_) => {
+                        set_last_error("Invalid UTF-8 descending string");
+                        return ptr::null_mut();
+                    }
+                };
+
+                let descending_flags: Vec<&str> = if descending_str.is_empty() {
+                    vec![]
+                } else {
+                    descending_str.split(',').collect()
+                };
+
+                if descending_flags.len() != exprs_len as usize {
+                    set_last_error("Expressions and descending arrays must have the same length");
+                    return ptr::null_mut();
+                }
+
+                let exprs_slice = std::slice::from_raw_parts(exprs_ptr, exprs_len as usize);
+                let mut sort_exprs: Vec<Expr> = Vec::with_capacity(exprs_len as usize);
+                let mut desc_bools: Vec<bool> = Vec::with_capacity(exprs_len as usize);
+
+                for (i, &expr_ptr) in exprs_slice.iter().enumerate() {
+                    match c_expr_to_expr(expr_ptr) {
+                        Ok(expr) => {
+                            sort_exprs.push(expr);
+                            desc_bools.push(descending_flags[i] == "true");
+                        }
+                        Err(e) => {
+                            set_last_error(&format!("Error converting expr: {}", e));
+                            return ptr::null_mut();
+                        }
+                    }
+                }
+
+                let df = rc_df.borrow();
+                match df
+                    .clone()
+                    .lazy()
+                    .sort_by_exprs(
+                        &sort_exprs,
+                        SortMultipleOptions::default().with_order_descending_multi(desc_bools),
+                    )
+                    .collect()
+                {
+                    Ok(sorted_df) => polars_df_to_c_df(sorted_df),
+                    Err(e) => {
+                        set_last_error(&format!("Sort by expressions error: {}", e));
+                        ptr::null_mut()
+                    }
+                }
+            }
+            Err(e) => {
+                set_last_error(&format!("Error getting DataFrame: {}", e));
+                ptr::null_mut()
             }
         }
     }

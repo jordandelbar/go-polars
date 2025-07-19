@@ -32,8 +32,12 @@ run-expressions-example:
 run-groupby-example:
 	@cd examples/groupby && go run .
 
+.PHONY: run-sorting-example
+run-sorting-example:
+	@cd examples/sorting && go run .
+
 .PHONY: run-all-examples
-run-all-examples: run-basic-example run-expressions-example run-groupby-example
+run-all-examples: run-basic-example run-expressions-example run-groupby-example run-sorting-example
 	@echo "✅ All examples completed!"
 
 .PHONY: test
@@ -78,6 +82,11 @@ view-coverage:
 test-groupby: quick-build
 	@echo "🧪 Running GroupBy tests..."
 	@cd tests && go test -v -run TestGroupBy
+
+.PHONY: test-sorting
+test-sorting: quick-build
+	@echo "🧪 Running Sorting tests..."
+	@cd tests && go test -v -run TestDataFrameSorting -run TestSortingChaining -run TestSortingWithNullHandling -run TestSortingPerformance -run TestSortingMemoryManagement
 
 .PHONY: check-build
 check-build:

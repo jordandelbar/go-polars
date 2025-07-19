@@ -72,5 +72,7 @@ extern CExpr* expr_min(CExpr* expr);
 extern CExpr* expr_max(CExpr* expr);
 extern CExpr* expr_std(CExpr* expr);
 extern CExpr* expr_count();
+extern CDataFrame* sort_by_columns(CDataFrame* df, const char* columns, const char* descending);
+extern CDataFrame* sort_by_exprs(CDataFrame* df, CExpr** exprs, int exprs_len, const char* descending);
 
 #endif
