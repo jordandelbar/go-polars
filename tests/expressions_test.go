@@ -18,7 +18,7 @@ func TestMain(m *testing.M) {
 func getTestDataPath() string {
 	// Get the path to the test data file
 	wd, _ := os.Getwd()
-	return filepath.Join(wd, "..", "testdata", "iris.csv")
+	return filepath.Join(wd, "..", "examples", "data", "iris.csv")
 }
 
 func loadTestData(t *testing.T) *polars.DataFrame {

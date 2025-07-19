@@ -313,3 +313,78 @@ pub extern "C" fn lit_string(val: *const c_char) -> *mut CExpr {
 pub extern "C" fn lit_bool(val: u8) -> *mut CExpr {
     expr_to_c_expr(lit(val != 0))
 }
+
+#[no_mangle]
+pub extern "C" fn expr_sum(expr_ptr: *mut CExpr) -> *mut CExpr {
+    unsafe {
+        let expr_result = c_expr_to_expr(expr_ptr);
+        match expr_result {
+            Ok(expr) => {
+                let new_expr = expr.clone().sum();
+                expr_to_c_expr(new_expr)
+            }
+            Err(_) => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn expr_mean(expr_ptr: *mut CExpr) -> *mut CExpr {
+    unsafe {
+        let expr_result = c_expr_to_expr(expr_ptr);
+        match expr_result {
+            Ok(expr) => {
+                let new_expr = expr.clone().mean();
+                expr_to_c_expr(new_expr)
+            }
+            Err(_) => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn expr_min(expr_ptr: *mut CExpr) -> *mut CExpr {
+    unsafe {
+        let expr_result = c_expr_to_expr(expr_ptr);
+        match expr_result {
+            Ok(expr) => {
+                let new_expr = expr.clone().min();
+                expr_to_c_expr(new_expr)
+            }
+            Err(_) => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn expr_max(expr_ptr: *mut CExpr) -> *mut CExpr {
+    unsafe {
+        let expr_result = c_expr_to_expr(expr_ptr);
+        match expr_result {
+            Ok(expr) => {
+                let new_expr = expr.clone().max();
+                expr_to_c_expr(new_expr)
+            }
+            Err(_) => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn expr_std(expr_ptr: *mut CExpr) -> *mut CExpr {
+    unsafe {
+        let expr_result = c_expr_to_expr(expr_ptr);
+        match expr_result {
+            Ok(expr) => {
+                let new_expr = expr.clone().std(1);
+                expr_to_c_expr(new_expr)
+            }
+            Err(_) => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn expr_count() -> *mut CExpr {
+    expr_to_c_expr(len().alias("count"))
+}

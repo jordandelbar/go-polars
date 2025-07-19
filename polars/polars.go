@@ -27,6 +27,11 @@ type Expr struct {
 	ptr *C.CExpr
 }
 
+// GroupBy represents a Polars GroupBy operation.
+type GroupBy struct {
+	ptr *C.CGroupBy
+}
+
 func (e Expr) Alias(name string) Expr {
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
@@ -85,6 +90,34 @@ func (df *DataFrame) Columns() []string {
 		names = append(names, C.GoString(cStr))
 	}
 	return names
+}
+
+// GroupBy creates a GroupBy operation on the specified columns.
+func (df *DataFrame) GroupBy(columns ...string) *GroupBy {
+	if df.ptr == nil {
+		log.Println("error: DataFrame is nil")
+		return &GroupBy{}
+	}
+
+	// Join column names with comma separator
+	columnsStr := ""
+	for i, col := range columns {
+		if i > 0 {
+			columnsStr += ","
+		}
+		columnsStr += col
+	}
+
+	cColumns := C.CString(columnsStr)
+	defer C.free(unsafe.Pointer(cColumns))
+
+	gbPtr := C.group_by(df.ptr, cColumns)
+	if gbPtr == nil {
+		log.Printf("error: %s", errors.New(C.GoString(C.get_last_error_message())))
+		return &GroupBy{}
+	}
+
+	return &GroupBy{ptr: (*C.CGroupBy)(gbPtr)}
 }
 
 // Filter filters the DataFrame based on the given expression.
@@ -277,4 +310,184 @@ func Lit(value interface{}) Expr {
 	}
 
 	return Expr{ptr: (*C.CExpr)(cExpr)}
+}
+
+// Free releases the memory associated with the GroupBy.
+func (gb *GroupBy) Free() {
+	if gb.ptr != nil {
+		C.free_groupby(gb.ptr)
+		gb.ptr = nil
+	}
+}
+
+// Agg performs aggregation operations on the GroupBy.
+func (gb *GroupBy) Agg(exprs ...Expr) *DataFrame {
+	if gb.ptr == nil {
+		log.Println("error: GroupBy is nil")
+		return &DataFrame{}
+	}
+
+	cExprs := make([]*C.CExpr, len(exprs))
+	for i, expr := range exprs {
+		cExprs[i] = expr.ptr
+	}
+
+	cExprsPtr := (**C.CExpr)(unsafe.Pointer(&cExprs[0]))
+	cExprsLen := C.int(len(exprs))
+
+	newDfPtr := C.groupby_agg(gb.ptr, cExprsPtr, cExprsLen)
+
+	if newDfPtr == nil {
+		log.Printf("error: %s", errors.New(C.GoString(C.get_last_error_message())))
+		return &DataFrame{}
+	}
+
+	return &DataFrame{ptr: (*C.CDataFrame)(newDfPtr)}
+}
+
+// Sum calculates the sum of the specified column for each group.
+func (gb *GroupBy) Sum(column string) *DataFrame {
+	if gb.ptr == nil {
+		log.Println("error: GroupBy is nil")
+		return &DataFrame{}
+	}
+
+	cColumn := C.CString(column)
+	defer C.free(unsafe.Pointer(cColumn))
+
+	newDfPtr := C.groupby_sum(gb.ptr, cColumn)
+
+	if newDfPtr == nil {
+		log.Printf("error: %s", errors.New(C.GoString(C.get_last_error_message())))
+		return &DataFrame{}
+	}
+
+	return &DataFrame{ptr: (*C.CDataFrame)(newDfPtr)}
+}
+
+// Mean calculates the mean of the specified column for each group.
+func (gb *GroupBy) Mean(column string) *DataFrame {
+	if gb.ptr == nil {
+		log.Println("error: GroupBy is nil")
+		return &DataFrame{}
+	}
+
+	cColumn := C.CString(column)
+	defer C.free(unsafe.Pointer(cColumn))
+
+	newDfPtr := C.groupby_mean(gb.ptr, cColumn)
+
+	if newDfPtr == nil {
+		log.Printf("error: %s", errors.New(C.GoString(C.get_last_error_message())))
+		return &DataFrame{}
+	}
+
+	return &DataFrame{ptr: (*C.CDataFrame)(newDfPtr)}
+}
+
+// Count calculates the count of rows for each group.
+func (gb *GroupBy) Count() *DataFrame {
+	if gb.ptr == nil {
+		log.Println("error: GroupBy is nil")
+		return &DataFrame{}
+	}
+
+	newDfPtr := C.groupby_count(gb.ptr)
+
+	if newDfPtr == nil {
+		log.Printf("error: %s", errors.New(C.GoString(C.get_last_error_message())))
+		return &DataFrame{}
+	}
+
+	return &DataFrame{ptr: (*C.CDataFrame)(newDfPtr)}
+}
+
+// Min calculates the minimum of the specified column for each group.
+func (gb *GroupBy) Min(column string) *DataFrame {
+	if gb.ptr == nil {
+		log.Println("error: GroupBy is nil")
+		return &DataFrame{}
+	}
+
+	cColumn := C.CString(column)
+	defer C.free(unsafe.Pointer(cColumn))
+
+	newDfPtr := C.groupby_min(gb.ptr, cColumn)
+
+	if newDfPtr == nil {
+		log.Printf("error: %s", errors.New(C.GoString(C.get_last_error_message())))
+		return &DataFrame{}
+	}
+
+	return &DataFrame{ptr: (*C.CDataFrame)(newDfPtr)}
+}
+
+// Max calculates the maximum of the specified column for each group.
+func (gb *GroupBy) Max(column string) *DataFrame {
+	if gb.ptr == nil {
+		log.Println("error: GroupBy is nil")
+		return &DataFrame{}
+	}
+
+	cColumn := C.CString(column)
+	defer C.free(unsafe.Pointer(cColumn))
+
+	newDfPtr := C.groupby_max(gb.ptr, cColumn)
+
+	if newDfPtr == nil {
+		log.Printf("error: %s", errors.New(C.GoString(C.get_last_error_message())))
+		return &DataFrame{}
+	}
+
+	return &DataFrame{ptr: (*C.CDataFrame)(newDfPtr)}
+}
+
+// Std calculates the standard deviation of the specified column for each group.
+func (gb *GroupBy) Std(column string) *DataFrame {
+	if gb.ptr == nil {
+		log.Println("error: GroupBy is nil")
+		return &DataFrame{}
+	}
+
+	cColumn := C.CString(column)
+	defer C.free(unsafe.Pointer(cColumn))
+
+	newDfPtr := C.groupby_std(gb.ptr, cColumn)
+
+	if newDfPtr == nil {
+		log.Printf("error: %s", errors.New(C.GoString(C.get_last_error_message())))
+		return &DataFrame{}
+	}
+
+	return &DataFrame{ptr: (*C.CDataFrame)(newDfPtr)}
+}
+
+// Sum creates a sum aggregation expression.
+func (e Expr) Sum() Expr {
+	return Expr{ptr: (*C.CExpr)(C.expr_sum(e.ptr))}
+}
+
+// Mean creates a mean aggregation expression.
+func (e Expr) Mean() Expr {
+	return Expr{ptr: (*C.CExpr)(C.expr_mean(e.ptr))}
+}
+
+// Min creates a min aggregation expression.
+func (e Expr) Min() Expr {
+	return Expr{ptr: (*C.CExpr)(C.expr_min(e.ptr))}
+}
+
+// Max creates a max aggregation expression.
+func (e Expr) Max() Expr {
+	return Expr{ptr: (*C.CExpr)(C.expr_max(e.ptr))}
+}
+
+// Std creates a standard deviation aggregation expression.
+func (e Expr) Std() Expr {
+	return Expr{ptr: (*C.CExpr)(C.expr_std(e.ptr))}
+}
+
+// Count creates a count aggregation expression.
+func Count() Expr {
+	return Expr{ptr: (*C.CExpr)(C.expr_count())}
 }

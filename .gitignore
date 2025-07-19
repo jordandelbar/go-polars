@@ -51,6 +51,9 @@ polars/bin/libpolars_go.so
 polars/bin/libpolars_go.dylib
 polars/bin/polars_go.dll
 
+# Build timestamp
+polars/bin/.build_timestamp
+
 # Example outputs
 examples/**/*.csv
 examples/**/*.parquet

@@ -12,6 +12,8 @@ polars = { version = "0.46", features = [
     "polars-io",
     "lazy",
     "parquet",
+    "strings",
+    "dtype-full",
 ] }
 lazy_static = "1.5"
 

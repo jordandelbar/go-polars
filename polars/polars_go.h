@@ -59,5 +59,18 @@ extern CExpr* expr_div_value(CExpr* expr, double value);
 extern CExpr* expr_and(CExpr* left_expr, CExpr* right_expr);
 extern CExpr* expr_or(CExpr* left_expr, CExpr* right_expr);
 extern CExpr* expr_not(CExpr* expr);
+extern CDataFrame* groupby_agg(CGroupBy* groupby, CExpr** exprs_ptr, int exprs_len);
+extern CDataFrame* groupby_sum(CGroupBy* groupby, const char* column);
+extern CDataFrame* groupby_mean(CGroupBy* groupby, const char* column);
+extern CDataFrame* groupby_count(CGroupBy* groupby);
+extern CDataFrame* groupby_min(CGroupBy* groupby, const char* column);
+extern CDataFrame* groupby_max(CGroupBy* groupby, const char* column);
+extern CDataFrame* groupby_std(CGroupBy* groupby, const char* column);
+extern CExpr* expr_sum(CExpr* expr);
+extern CExpr* expr_mean(CExpr* expr);
+extern CExpr* expr_min(CExpr* expr);
+extern CExpr* expr_max(CExpr* expr);
+extern CExpr* expr_std(CExpr* expr);
+extern CExpr* expr_count();
 
 #endif

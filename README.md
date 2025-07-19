@@ -76,6 +76,28 @@ go-polars supports a comprehensive set of expression operations for data manipul
 - `Or(expr)` - Logical OR
 - `Not()` - Logical NOT
 
+### GroupBy and Aggregation Operations
+
+go-polars provides powerful GroupBy functionality for data aggregation:
+
+#### GroupBy Operations
+- `GroupBy(columns...)` - Group data by one or more columns
+- `Count()` - Count rows per group
+- `Sum(column)` - Sum values per group
+- `Mean(column)` - Calculate mean per group
+- `Min(column)` - Find minimum per group
+- `Max(column)` - Find maximum per group
+- `Std(column)` - Calculate standard deviation per group
+- `Agg(expressions...)` - Custom aggregations with multiple expressions
+
+#### Aggregation Expressions
+- `Col("column").Sum()` - Sum aggregation expression
+- `Col("column").Mean()` - Mean aggregation expression
+- `Col("column").Min()` - Minimum aggregation expression
+- `Col("column").Max()` - Maximum aggregation expression
+- `Col("column").Std()` - Standard deviation aggregation expression
+- `Count()` - Count aggregation expression
+
 #### Basic Usage Examples
 
 ```go
@@ -101,9 +123,22 @@ complex := df.Filter(
 
 // Chaining operations
 result := df.
-    Filter(polars.Col("active").Eq(1)).
+    Filter(polars.Col("age").Gt(18).And(polars.Col("score").Ge(80))).
     WithColumns(polars.Col("salary").MulValue(1.05).Alias("new_salary")).
     Select(polars.Col("name"), polars.Col("new_salary"))
+
+// GroupBy operations
+groupedData := df.GroupBy("department")
+countResult := groupedData.Count()
+avgSalary := groupedData.Mean("salary")
+
+// Complex aggregations
+stats := df.GroupBy("department").Agg(
+    polars.Col("salary").Mean().Alias("avg_salary"),
+    polars.Col("salary").Max().Alias("max_salary"),
+    polars.Col("salary").Min().Alias("min_salary"),
+    polars.Count().Alias("employee_count"),
+)
 ```
 
 ## 🚀 Examples & Quick Start
@@ -117,14 +152,23 @@ make run-basic-example
 ### Expression Example
 Run the full-featured example with complex operations:
 ```bash
-make run-expressions-demo
+make run-expressions-example
+```
+
+### GroupBy Example
+Run the GroupBy and aggregation operations demo:
+```bash
+make run-groupby-example
 ```
 
 ### Available Make Commands
-- `make local-build` - Build the library from source
+- `make local-build` - Build the library from source (smart build)
+- `make force-build` - Force rebuild even if up to date
+- `make quick-build` - Smart build (only rebuilds if needed)
 - `make run-basic-example` - Run basic DataFrame demo
 - `make run-expressions-example` - Run expression operations demo
-- `make run-expressions-demo` - Run comprehensive feature demo
+- `make run-groupby-example` - Run GroupBy and aggregation demo
+- `make run-all-examples` - Run all examples
 
 ## 🧪 Testing
 
@@ -135,11 +179,17 @@ make test
 # Quick test run
 make test-short
 
+# Test specific functionality
+make test-groupby
+
 # Performance benchmarks
 make test-bench
 
 # Generate coverage report
 make test-coverage
+
+# Development cycle (quick build + short tests)
+make dev
 ```
 
 ## 🤝 Contributing
