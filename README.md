@@ -65,7 +65,7 @@ cd go-polars
 ./build.sh
 ```
 
-For detailed installation options, see [INSTALLATION.md](INSTALLATION.md).
+For detailed installation options, see [the installation guide](./docs/INSTALLATION.md).
 
 ## ✨ Features
 
