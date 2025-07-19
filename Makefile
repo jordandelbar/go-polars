@@ -54,9 +54,25 @@ test-bench: quick-build
 .PHONY: test-coverage
 test-coverage: quick-build
 	@echo "📈 Running tests with coverage..."
-	@cd tests && go test -v -coverprofile=coverage.out
+	@cd tests && go test -v -coverprofile=coverage.out -coverpkg=github.com/jordandelbar/go-polars/polars
 	@cd tests && go tool cover -html=coverage.out -o coverage.html
 	@echo "📊 Coverage report generated: tests/coverage.html"
+	@cd tests && go tool cover -func=coverage.out
+
+.PHONY: view-coverage
+view-coverage:
+	@if [ -f "tests/coverage.html" ]; then \
+		echo "🌐 Opening coverage report in browser..."; \
+		if command -v xdg-open >/dev/null 2>&1; then \
+			xdg-open tests/coverage.html; \
+		elif command -v open >/dev/null 2>&1; then \
+			open tests/coverage.html; \
+		else \
+			echo "📁 Coverage report available at: tests/coverage.html"; \
+		fi; \
+	else \
+		echo "❌ No coverage report found. Run 'make test-coverage' first."; \
+	fi
 
 .PHONY: test-groupby
 test-groupby: quick-build

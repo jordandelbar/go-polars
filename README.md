@@ -188,6 +188,9 @@ make test-bench
 # Generate coverage report
 make test-coverage
 
+# View coverage in browser
+make view-coverage
+
 # Development cycle (quick build + short tests)
 make dev
 ```

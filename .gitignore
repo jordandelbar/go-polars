@@ -58,3 +58,6 @@ polars/bin/.build_timestamp
 examples/**/*.csv
 examples/**/*.parquet
 !examples/data/*.csv
+
+# Coverage files
+tests/coverage.html
