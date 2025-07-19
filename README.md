@@ -13,43 +13,59 @@ https://github.com/pola-rs/polars
 
 ## 📦 Installation
 
-### Prerequisites
+### Quick Start (Recommended)
 
-- **Rust**: Install from [rustup.rs](https://rustup.rs/) or run:
-  ```bash
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  ```
-- **Build tools**:
-  ```bash
-  sudo apt-get install build-essential  # Ubuntu/Debian
-  # or
-  sudo dnf install make automake gcc gcc-c++ kernel-devel   # Fedora/CentOS/RHEL
-  ```
-
-### Quick Start
+Simply add go-polars to your project - the binary will be downloaded automatically:
 
 ```bash
-# Clone and build the library
-git clone https://github.com/jordandelbar/go-polars
-cd go-polars
-
-# Build automatically (detects your OS)
-./build.sh
-
-# Or use make
-make local-build
-
-# Run examples
-make run-basic-example
+go mod init your-project
+go get github.com/jordandelbar/go-polars
 ```
 
-### Why Build Locally?
-We don't include pre-compiled binaries in the repository because:
-- 🔒 **Security**: You build from source you can trust
-- 🖥️ **Platform support**: Works on Linux, macOS, and Windows
-- 📦 **Smaller repo**: No 40MB+ binary files
+```go
+package main
 
-We aim to provide pre-compiled binary in the future.
+import (
+    "fmt"
+    "github.com/jordandelbar/go-polars/polars"
+)
+
+func main() {
+    // Binary is automatically downloaded on first import
+    df, err := polars.ReadCSV("data.csv")
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println(df.String())
+}
+```
+
+### Pre-compiled Binaries
+
+✅ **Available for**:
+- Linux x86_64
+
+🚧 **Coming soon**:
+- macOS x86_64 and ARM64
+- Windows x86_64
+
+The library automatically downloads the appropriate binary for your platform from [GitHub Releases](https://github.com/jordandelbar/go-polars/releases).
+
+### Alternative: Build from Source
+
+If pre-compiled binaries aren't available for your platform:
+
+**Prerequisites**:
+- **Rust**: Install from [rustup.rs](https://rustup.rs/)
+- **Build tools**: `build-essential` (Ubuntu) or equivalent
+
+```bash
+git clone https://github.com/jordandelbar/go-polars
+cd go-polars
+./build.sh
+```
+
+For detailed installation options, see [INSTALLATION.md](INSTALLATION.md).
 
 ## ✨ Features
 
