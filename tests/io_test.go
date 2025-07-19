@@ -335,12 +335,18 @@ func TestFileFormatComparison(t *testing.T) {
 
 // Benchmark I/O operations
 func BenchmarkIOOperations(b *testing.B) {
-	df := loadTestData(&testing.T{})
+	// Load test data directly without using testing.T
+	testDataPath := getTestDataPath()
+	df, err := polars.ReadCSV(testDataPath)
+	if err != nil {
+		b.Fatalf("Failed to load test data: %v", err)
+	}
 	tempDir := b.TempDir()
 
 	b.Run("WriteCSV", func(b *testing.B) {
+		path := filepath.Join(tempDir, "bench_output.csv")
+		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			path := filepath.Join(tempDir, "bench_output_"+string(rune(i))+".csv")
 			err := df.WriteCSV(path)
 			if err != nil {
 				b.Fatalf("Failed to write CSV: %v", err)
@@ -349,8 +355,9 @@ func BenchmarkIOOperations(b *testing.B) {
 	})
 
 	b.Run("WriteParquet", func(b *testing.B) {
+		path := filepath.Join(tempDir, "bench_output.parquet")
+		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			path := filepath.Join(tempDir, "bench_output_"+string(rune(i))+".parquet")
 			err := df.WriteParquet(path)
 			if err != nil {
 				b.Fatalf("Failed to write Parquet: %v", err)
@@ -366,6 +373,7 @@ func BenchmarkIOOperations(b *testing.B) {
 	_ = df.WriteParquet(parquetPath)
 
 	b.Run("ReadCSV", func(b *testing.B) {
+		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			_, err := polars.ReadCSV(csvPath)
 			if err != nil {
@@ -375,6 +383,7 @@ func BenchmarkIOOperations(b *testing.B) {
 	})
 
 	b.Run("ReadParquet", func(b *testing.B) {
+		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			_, err := polars.ReadParquet(parquetPath)
 			if err != nil {

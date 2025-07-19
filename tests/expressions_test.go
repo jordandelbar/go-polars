@@ -338,15 +338,22 @@ func TestEdgeCases(t *testing.T) {
 
 // Benchmark tests
 func BenchmarkExpressionOperations(b *testing.B) {
-	df := loadTestData(&testing.T{})
+	// Load test data directly without using testing.T
+	csvPath := getTestDataPath()
+	df, err := polars.ReadCSV(csvPath)
+	if err != nil {
+		b.Fatalf("Failed to load test data: %v", err)
+	}
 
 	b.Run("FilterGt", func(b *testing.B) {
+		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			_ = df.Filter(polars.Col("petal.length").Gt(2))
 		}
 	})
 
 	b.Run("MathematicalOperations", func(b *testing.B) {
+		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			_ = df.WithColumns(
 				polars.Col("petal.length").AddValue(1.0).Alias("test"),
@@ -355,6 +362,7 @@ func BenchmarkExpressionOperations(b *testing.B) {
 	})
 
 	b.Run("ComplexExpression", func(b *testing.B) {
+		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			_ = df.Filter(
 				polars.Col("petal.length").Gt(3).And(polars.Col("petal.width").Gt(1)),

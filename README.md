@@ -6,7 +6,7 @@
 
 This project creates Go bindings for the Polars data manipulation library!
 
-## 🤔 What is Polars?
+## 🐻‍❄️ What is Polars?
 Polars is an open-source library for data manipulation, known for being one of the fastest data processing solutions on a single machine. It features a well-structured, typed API that is both expressive and easy to use.
 
 https://github.com/pola-rs/polars
