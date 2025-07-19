@@ -3,6 +3,7 @@ package polars
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,8 +18,11 @@ const (
 	// GitHub release URL pattern
 	releaseURLPattern = "https://github.com/jordandelbar/go-polars/releases/download/%s/%s"
 
-	// Latest stable version - update this when releasing new binaries
-	defaultVersion = "v0.0.12"
+	// GitHub API URL for latest release
+	latestReleaseAPI = "https://api.github.com/repos/jordandelbar/go-polars/releases/latest"
+
+	// Fallback version if API fails
+	fallbackVersion = "v0.0.13"
 
 	// Binary filenames for different platforms
 	linuxBinary   = "libpolars_go-linux-amd64-%s.so"
@@ -38,10 +42,46 @@ type BinaryInfo struct {
 	SHA256        string
 }
 
+// GitHubRelease represents a GitHub release response
+type GitHubRelease struct {
+	TagName string `json:"tag_name"`
+}
+
+// getLatestVersion fetches the latest release version from GitHub API
+func getLatestVersion() string {
+	// Check if version is overridden by environment variable
+	if version := os.Getenv("GO_POLARS_VERSION"); version != "" {
+		return version
+	}
+
+	// Try to fetch latest version from GitHub API
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Get(latestReleaseAPI)
+	if err != nil {
+		return fallbackVersion
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fallbackVersion
+	}
+
+	var release GitHubRelease
+	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
+		return fallbackVersion
+	}
+
+	if release.TagName == "" {
+		return fallbackVersion
+	}
+
+	return release.TagName
+}
+
 // GetBinaryInfo returns the binary information for the current platform
 func GetBinaryInfo(version string) (*BinaryInfo, error) {
 	if version == "" {
-		version = defaultVersion
+		version = getLatestVersion()
 	}
 
 	var remoteName, localName string
@@ -221,7 +261,7 @@ func GetVersionFromEnv() string {
 	if version := os.Getenv("GO_POLARS_VERSION"); version != "" {
 		return version
 	}
-	return defaultVersion
+	return getLatestVersion()
 }
 
 // CleanOldBinaries removes old binary files to save space
