@@ -68,19 +68,20 @@ func GetBinaryInfo(version string) (*BinaryInfo, error) {
 	}, nil
 }
 
-// GetBinDirectory returns the path to the bin directory
+// GetBinDirectory returns the path to the standard cache directory for binaries
 func GetBinDirectory() (string, error) {
-	// Get the directory of the current package
-	_, filename, _, ok := runtime.Caller(0)
-	if !ok {
-		return "", fmt.Errorf("unable to get current file path")
+	var binDir string
+
+	// Use /tmp/go-polars for simplicity and universal compatibility
+	switch runtime.GOOS {
+	case "windows":
+		tempDir := os.TempDir()
+		binDir = filepath.Join(tempDir, "go-polars")
+	default: // Linux, macOS and other Unix-like systems
+		binDir = "/tmp/go-polars"
 	}
 
-	// polars package directory
-	packageDir := filepath.Dir(filename)
-	binDir := filepath.Join(packageDir, "bin")
-
-	// Create bin directory if it doesn't exist
+	// Create directory if it doesn't exist
 	if err := os.MkdirAll(binDir, 0755); err != nil {
 		return "", fmt.Errorf("failed to create bin directory: %w", err)
 	}
