@@ -1,8 +1,9 @@
+//go:generate go run setup_binary.go
+
 package polars
 
 /*
 #cgo CFLAGS: -I${SRCDIR}
-#cgo LDFLAGS: -L${SRCDIR}/bin -lpolars_go
 #cgo linux LDFLAGS: -L/tmp/go-polars -L${SRCDIR}/bin -lpolars_go -Wl,-rpath=/tmp/go-polars
 #cgo darwin LDFLAGS: -L/tmp/go-polars -L${SRCDIR}/bin -lpolars_go -Wl,-rpath,/tmp/go-polars
 #cgo windows LDFLAGS: -L%TEMP%/go-polars -L${SRCDIR}/bin -lpolars_go
