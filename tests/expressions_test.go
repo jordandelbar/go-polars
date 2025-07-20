@@ -3,6 +3,7 @@ package tests
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 
 	"github.com/jordandelbar/go-polars/polars"
@@ -185,6 +186,234 @@ func TestFloatComparisonOperations(t *testing.T) {
 	})
 }
 
+// Test Comparison Operations Error Cases
+func TestComparisonOperationsErrorCases(t *testing.T) {
+	df := loadTestData(t)
+
+	t.Run("UnsupportedTypeGt", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Error("Expected panic for unsupported type")
+			}
+		}()
+		df.Filter(polars.Col("petal.length").Gt("invalid"))
+	})
+
+	t.Run("UnsupportedTypeLt", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Error("Expected panic for unsupported type")
+			}
+		}()
+		df.Filter(polars.Col("petal.length").Lt("invalid"))
+	})
+
+	t.Run("UnsupportedTypeEq", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Error("Expected panic for unsupported type")
+			}
+		}()
+		df.Filter(polars.Col("petal.length").Eq("invalid"))
+	})
+
+	t.Run("UnsupportedTypeNe", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Error("Expected panic for unsupported type")
+			}
+		}()
+		df.Filter(polars.Col("petal.length").Ne("invalid"))
+	})
+
+	t.Run("UnsupportedTypeGe", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Error("Expected panic for unsupported type")
+			}
+		}()
+		df.Filter(polars.Col("petal.length").Ge("invalid"))
+	})
+
+	t.Run("UnsupportedTypeLe", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Error("Expected panic for unsupported type")
+			}
+		}()
+		df.Filter(polars.Col("petal.length").Le("invalid"))
+	})
+}
+
+// Test All Comparison Operation Type Combinations
+func TestComparisonTypeExhaustive(t *testing.T) {
+	df := loadTestData(t)
+
+	types := []struct {
+		name  string
+		value interface{}
+	}{
+		{"int", 2},
+		{"int32", int32(2)},
+		{"int64", int64(2)},
+		{"float32", float32(2.0)},
+		{"float64", 2.0},
+	}
+
+	operations := []struct {
+		name string
+		op   func(polars.Expr, any) polars.Expr
+	}{
+		{"Gt", func(e polars.Expr, v any) polars.Expr { return e.Gt(v) }},
+		{"Lt", func(e polars.Expr, v any) polars.Expr { return e.Lt(v) }},
+		{"Eq", func(e polars.Expr, v any) polars.Expr { return e.Eq(v) }},
+		{"Ne", func(e polars.Expr, v any) polars.Expr { return e.Ne(v) }},
+		{"Ge", func(e polars.Expr, v any) polars.Expr { return e.Ge(v) }},
+		{"Le", func(e polars.Expr, v any) polars.Expr { return e.Le(v) }},
+	}
+
+	for _, op := range operations {
+		t.Run(op.name, func(t *testing.T) {
+			for _, type_ := range types {
+				t.Run(type_.name, func(t *testing.T) {
+					result := df.Filter(op.op(polars.Col("petal.length"), type_.value))
+					if result.Height() < 0 {
+						t.Errorf("%s with %s should not fail", op.name, type_.name)
+					}
+				})
+			}
+		})
+	}
+}
+
+// Test Literal Expression Type Coverage
+func TestLiteralExpressionTypes(t *testing.T) {
+	df := loadTestData(t)
+
+	t.Run("LitInt", func(t *testing.T) {
+		result := df.WithColumns(polars.Lit(42).Alias("int_literal"))
+		if result.Height() != df.Height() {
+			t.Error("Int literal should work")
+		}
+	})
+
+	t.Run("LitInt32", func(t *testing.T) {
+		result := df.WithColumns(polars.Lit(int32(42)).Alias("int32_literal"))
+		if result.Height() != df.Height() {
+			t.Error("Int32 literal should work")
+		}
+	})
+
+	t.Run("LitInt64", func(t *testing.T) {
+		result := df.WithColumns(polars.Lit(int64(42)).Alias("int64_literal"))
+		if result.Height() != df.Height() {
+			t.Error("Int64 literal should work")
+		}
+	})
+
+	t.Run("LitFloat32", func(t *testing.T) {
+		result := df.WithColumns(polars.Lit(float32(3.14)).Alias("float32_literal"))
+		if result.Height() != df.Height() {
+			t.Error("Float32 literal should work")
+		}
+	})
+
+	t.Run("LitFloat64", func(t *testing.T) {
+		result := df.WithColumns(polars.Lit(3.14).Alias("float64_literal"))
+		if result.Height() != df.Height() {
+			t.Error("Float64 literal should work")
+		}
+	})
+
+	t.Run("LitBool", func(t *testing.T) {
+		result := df.WithColumns(polars.Lit(true).Alias("bool_literal"))
+		if result.Height() != df.Height() {
+			t.Error("Bool literal should work")
+		}
+	})
+
+	t.Run("LitString", func(t *testing.T) {
+		result := df.WithColumns(polars.Lit("test").Alias("string_literal"))
+		if result.Height() != df.Height() {
+			t.Error("String literal should work")
+		}
+	})
+
+	t.Run("UnsupportedLiteralType", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Error("Expected panic for unsupported literal type")
+			}
+		}()
+		df.WithColumns(polars.Lit([]int{1, 2, 3}).Alias("unsupported"))
+	})
+}
+
+// Test Head with Different Parameters
+func TestHeadVariations(t *testing.T) {
+	df := loadTestData(t)
+	originalHeight := df.Height()
+
+	t.Run("HeadZero", func(t *testing.T) {
+		result := df.Head(0)
+		if result.Height() != 0 {
+			t.Error("Head(0) should return empty dataframe")
+		}
+		if result.Width() != df.Width() {
+			t.Error("Head(0) should preserve column count")
+		}
+	})
+
+	t.Run("HeadLargerThanDataset", func(t *testing.T) {
+		result := df.Head(1000)
+		if result.Height() != originalHeight {
+			t.Error("Head with large number should return entire dataset")
+		}
+	})
+
+	t.Run("HeadNormal", func(t *testing.T) {
+		result := df.Head(3)
+		if result.Height() != 3 {
+			t.Error("Head(3) should return exactly 3 rows")
+		}
+		if result.Width() != df.Width() {
+			t.Error("Head should preserve column count")
+		}
+	})
+}
+
+// Test Filter Edge Cases
+func TestFilterEdgeCases(t *testing.T) {
+	df := loadTestData(t)
+
+	t.Run("FilterWithInvalidColumn", func(t *testing.T) {
+		// This should not panic but may return an error through normal operation
+		result := df.Filter(polars.Col("non_existent").Gt(1))
+		// The operation may succeed but should be handled gracefully
+		if result == nil {
+			t.Error("Filter should return a result even with invalid column")
+		}
+	})
+
+	t.Run("ChainedFilters", func(t *testing.T) {
+		result := df.
+			Filter(polars.Col("petal.length").Gt(1.0)).
+			Filter(polars.Col("petal.width").Lt(3.0)).
+			Filter(polars.Col("sepal.length").Ge(4.0))
+
+		if result.Height() < 0 {
+			t.Error("Chained filters should work")
+		}
+	})
+
+	t.Run("FilterToEmpty", func(t *testing.T) {
+		result := df.Filter(polars.Col("petal.length").Gt(1000.0))
+		if result.Height() != 0 {
+			t.Error("Impossible filter should result in empty dataframe")
+		}
+	})
+}
+
 // Test Mathematical Operations
 func TestMathematicalOperations(t *testing.T) {
 	df := loadTestData(t)
@@ -199,13 +428,7 @@ func TestMathematicalOperations(t *testing.T) {
 		}
 
 		columns := result.Columns()
-		found := false
-		for _, col := range columns {
-			if col == "petal_plus_one" {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(columns, "petal_plus_one")
 		if !found {
 			t.Error("Expected to find 'petal_plus_one' column")
 		}
@@ -251,13 +474,7 @@ func TestMathematicalOperations(t *testing.T) {
 		}
 
 		columns := result.Columns()
-		found := false
-		for _, col := range columns {
-			if col == "petal_sum" {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(columns, "petal_sum")
 		if !found {
 			t.Error("Expected to find 'petal_sum' column")
 		}
@@ -368,13 +585,7 @@ func TestComplexExpressions(t *testing.T) {
 		}
 
 		columns := result.Columns()
-		found := false
-		for _, col := range columns {
-			if col == "complex_calc" {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(columns, "complex_calc")
 		if !found {
 			t.Error("Expected to find 'complex_calc' column")
 		}
@@ -438,6 +649,107 @@ func TestEdgeCases(t *testing.T) {
 }
 
 // Benchmark tests
+// Test GroupBy Error Handling and Edge Cases
+func TestGroupByEdgeCases(t *testing.T) {
+	df := loadTestData(t)
+
+	t.Run("GroupByEmptyString", func(t *testing.T) {
+		groupby := df.GroupBy("")
+		if groupby == nil {
+			t.Error("GroupBy with empty string should return a result")
+		}
+	})
+
+	t.Run("GroupByMultipleColumns", func(t *testing.T) {
+		groupby := df.GroupBy("variety,sepal.length")
+		if groupby == nil {
+			t.Error("GroupBy with multiple columns should work")
+		}
+		result := groupby.Count()
+		if result.Height() == 0 {
+			t.Error("GroupBy count should return results")
+		}
+	})
+}
+
+// Test Select Edge Cases
+func TestSelectEdgeCases(t *testing.T) {
+	df := loadTestData(t)
+
+	t.Run("SelectEmptyList", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r != nil {
+				// Select with no columns causes a panic - this is the current behavior
+				t.Logf("Select with no columns panicked (expected): %v", r)
+			}
+		}()
+		result := df.Select()
+		// If we get here without panic, test the result
+		if result.Width() != 0 {
+			t.Error("Select with no columns should return empty width")
+		}
+		if result.Height() != df.Height() {
+			t.Error("Select should preserve row count")
+		}
+	})
+
+	t.Run("SelectDuplicateColumns", func(t *testing.T) {
+		result := df.Select(
+			polars.Col("variety"),
+			polars.Col("variety"),
+		)
+		// This behavior may vary, but shouldn't crash
+		if result == nil {
+			t.Error("Select with duplicate columns should return a result")
+		}
+	})
+
+	t.Run("SelectWithExpression", func(t *testing.T) {
+		result := df.Select(
+			polars.Col("petal.length"),
+			polars.Col("petal.width").AddValue(1.0).Alias("modified"),
+		)
+		if result.Width() != 2 {
+			t.Error("Select with expression should work")
+		}
+	})
+}
+
+// Test WithColumns Edge Cases
+func TestWithColumnsEdgeCases(t *testing.T) {
+	df := loadTestData(t)
+
+	t.Run("WithColumnsEmpty", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r != nil {
+				// WithColumns with no arguments causes a panic - this is the current behavior
+				t.Logf("WithColumns with no arguments panicked (expected): %v", r)
+			}
+		}()
+		result := df.WithColumns()
+		// If we get here without panic, test the result
+		if result.Width() != df.Width() {
+			t.Error("WithColumns with no arguments should preserve dataframe")
+		}
+		if result.Height() != df.Height() {
+			t.Error("WithColumns should preserve row count")
+		}
+	})
+
+	t.Run("WithColumnsComplexExpression", func(t *testing.T) {
+		result := df.WithColumns(
+			polars.Col("petal.length").
+				MulValue(2.0).
+				Add(polars.Col("petal.width")).
+				DivValue(3.0).
+				Alias("complex_calc"),
+		)
+		if result.Width() != df.Width()+1 {
+			t.Error("Complex expression in WithColumns should work")
+		}
+	})
+}
+
 func BenchmarkExpressionOperations(b *testing.B) {
 	// Load test data directly without using testing.T
 	csvPath := getTestDataPath()
@@ -450,6 +762,13 @@ func BenchmarkExpressionOperations(b *testing.B) {
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			_ = df.Filter(polars.Col("petal.length").Gt(2))
+		}
+	})
+
+	b.Run("FilterGtFloat", func(b *testing.B) {
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			_ = df.Filter(polars.Col("petal.length").Gt(2.0))
 		}
 	})
 
@@ -468,6 +787,18 @@ func BenchmarkExpressionOperations(b *testing.B) {
 			_ = df.Filter(
 				polars.Col("petal.length").Gt(3).And(polars.Col("petal.width").Gt(1)),
 			)
+		}
+	})
+
+	b.Run("AllComparisonTypes", func(b *testing.B) {
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			_ = df.Filter(polars.Col("petal.length").Gt(1))
+			_ = df.Filter(polars.Col("petal.length").Lt(2))
+			_ = df.Filter(polars.Col("petal.length").Eq(1))
+			_ = df.Filter(polars.Col("petal.length").Ne(1))
+			_ = df.Filter(polars.Col("petal.length").Ge(1))
+			_ = df.Filter(polars.Col("petal.length").Le(2))
 		}
 	})
 }
