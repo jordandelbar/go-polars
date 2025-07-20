@@ -209,6 +209,18 @@ make view-coverage
 # Development cycle (quick build + short tests)
 make dev
 ```
+## 📋 To do
+
+- [ ] Join operations
+- [ ] Data type conversions: `Cast()`
+- [ ] Schema inspection
+- [ ] Null handling: `IsNull()`, `IsNotNull()`, `FillNull()`
+- [ ] Advanced Aggregations: `Median()`,...
+- [ ] Window functions
+- [ ] Pivot & Reshape options
+- [ ] Additional I/O Formats: `ReadJSON()`, `WriteJSON()`,...
+- [ ] When/Otherwise logic
+- [ ] Data Quality & Validation: `IsEmpty()`,...
 
 ## 🤝 Contributing
 
