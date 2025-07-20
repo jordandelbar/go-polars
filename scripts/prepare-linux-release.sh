@@ -52,17 +52,12 @@ cat > "$RELEASE_NOTES" << EOF
 - **SHA256**: \`$BINARY_SHA256\`
 - **MD5**: \`$BINARY_MD5\`
 
-## Installation
+## Verification
 
 1. Download the binary file
 2. Verify the checksum:
    \`\`\`bash
    sha256sum -c $(basename "$RELEASE_BINARY").sha256
-   \`\`\`
-3. Copy to your project:
-   \`\`\`bash
-   mkdir -p polars/bin
-   cp $(basename "$RELEASE_BINARY") polars/bin/libpolars_go.so
    \`\`\`
 
 ## Build Information
@@ -71,10 +66,6 @@ cat > "$RELEASE_NOTES" << EOF
 - **Polars version**: $(cd "$PROJECT_ROOT/polars/bindings" && cargo tree | grep "polars v" | head -n1 | awk '{print $2}')
 - **Rust version**: $(rustc --version)
 - **Build machine**: $(uname -a)
-
-## Usage
-
-After installation, you can use go-polars in your Go projects. Make sure the library is in your library path or use the provided Go bindings that handle loading automatically.
 
 EOF
 

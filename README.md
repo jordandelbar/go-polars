@@ -31,7 +31,6 @@ import (
 )
 
 func main() {
-    // Binary is automatically downloaded on first import
     df, err := polars.ReadCSV("data.csv")
     if err != nil {
         panic(err)
