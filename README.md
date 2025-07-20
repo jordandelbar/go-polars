@@ -31,12 +31,30 @@ https://github.com/pola-rs/polars
 
 ### Quick Start (Recommended)
 
-Simply add go-polars to your project - the binary will be downloaded automatically:
+**Option 1: Complete Setup Script (Linux x86_64)**
+
+For the easiest setup experience, use our setup script that downloads both the package and precompiled binary:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/jordandelbar/go-polars/main/scripts/setup.sh | sh
+```
+
+This script will:
+- Download and set up the polars package in your project
+- Download the precompiled binary for your platform
+- Configure your Go module with the necessary replace directives
+- Create an example file to test your installation
+
+**Option 2: Manual Setup**
+
+Simply add go-polars to your project:
 
 ```bash
 go mod init your-project
 go get github.com/jordandelbar/go-polars
 ```
+
+*Note: With manual setup, you'll need to build the binary yourself or use our standalone install script.*
 
 ```go
 package main
@@ -65,6 +83,16 @@ func main() {
 - Windows x86_64
 
 The library automatically downloads the appropriate binary for your platform from [GitHub Releases](https://github.com/jordandelbar/go-polars/releases).
+
+### Standalone Binary Installation
+
+If you want to add just the precompiled binary to an existing project:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/jordandelbar/go-polars/main/scripts/install.sh | sh
+```
+
+This installs only the binary to `polars/bin/` in your current directory.
 
 ### Alternative: Build from Source
 
