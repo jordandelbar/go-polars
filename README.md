@@ -54,7 +54,8 @@ go mod init your-project
 go get github.com/jordandelbar/go-polars
 ```
 
-*Note: With manual setup, you'll need to build the binary yourself or use our standalone install script.*
+> [!IMPORTANT]
+> With manual setup, you'll need to build the binary yourself or use our standalone install script
 
 ```go
 package main
