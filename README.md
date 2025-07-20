@@ -13,6 +13,22 @@ https://github.com/pola-rs/polars
 
 ## 📦 Installation
 
+> [!NOTE]
+> **Build Process & Security Considerations**
+>
+> The GitHub Actions runners cannot compile the Polars Rust bindings due to resource constraints, so binaries are currently compiled on a local development machine. While this isn't ideal from a security perspective, we've implemented several measures to ensure transparency and verifiability:
+>
+> - **🔍 Reproducible builds**: All build scripts are available in [`./scripts`](./scripts) for review
+> - **🔐 Checksum verification**: Each binary release includes SHA256 and MD5 checksums
+> - **📋 Build transparency**: Release notes include build environment details and dependency versions
+> - **🏗️ Self-compilation option**: You can always build from source using `./build.sh`
+>
+> **To verify a binary download:**
+> ```bash
+> # Download the checksum file and verify
+> sha256sum -c libpolars_go-linux-amd64-v0.1.0.so.sha256
+> ```
+
 ### Quick Start (Recommended)
 
 Simply add go-polars to your project - the binary will be downloaded automatically:
@@ -63,8 +79,6 @@ git clone https://github.com/jordandelbar/go-polars
 cd go-polars
 ./build.sh
 ```
-
-For detailed installation options, see [the installation guide](./docs/INSTALLATION.md).
 
 ## ✨ Features
 
