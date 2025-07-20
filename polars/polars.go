@@ -1,5 +1,3 @@
-//go:generate go run github.com/jordandelbar/go-polars/cmd/download/main.go
-
 package polars
 
 /*
