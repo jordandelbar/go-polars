@@ -1,4 +1,4 @@
-//go:generate go run ../../cmd/download/main.go
+//go:generate go run github.com/jordandelbar/go-polars/cmd/download/main.go
 
 package polars
 
