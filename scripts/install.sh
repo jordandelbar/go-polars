@@ -7,7 +7,7 @@ set -e
 # Or: curl -sSL https://raw.githubusercontent.com/jordandelbar/go-polars/main/scripts/install.sh | sh -s -- --version v0.0.22
 
 REPO="jordandelbar/go-polars"
-DEFAULT_VERSION="v0.0.22"
+DEFAULT_VERSION="v0.0.23"
 INSTALL_DIR="polars/bin"
 BINARY_NAME="libpolars_go.a"
 
