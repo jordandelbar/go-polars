@@ -527,3 +527,136 @@ pub extern "C" fn sort_by_exprs(
         }
     }
 }
+
+// DataFrame creation functions
+
+// Column type enum for mixed DataFrame creation
+#[repr(C)]
+pub enum CColumnType {
+    String = 0,
+    Int64 = 1,
+    Float64 = 2,
+    Bool = 3,
+}
+
+#[repr(C)]
+pub struct CColumnSpec {
+    name: *const c_char,
+    column_type: CColumnType,
+    data: *const std::ffi::c_void,
+    length: c_int,
+}
+
+#[no_mangle]
+pub extern "C" fn create_dataframe_mixed(
+    column_specs: *const CColumnSpec,
+    column_count: c_int,
+) -> *mut CDataFrame {
+    unsafe {
+        if column_specs.is_null() || column_count <= 0 {
+            set_last_error("Invalid parameters for DataFrame creation");
+            return ptr::null_mut();
+        }
+
+        let mut series_vec = Vec::new();
+
+        for i in 0..column_count {
+            let spec = &*column_specs.add(i as usize);
+
+            if spec.name.is_null() || spec.length < 0 {
+                set_last_error("Invalid column specification");
+                return ptr::null_mut();
+            }
+
+            // Allow null data only if length is 0 (empty column)
+            if spec.data.is_null() && spec.length > 0 {
+                set_last_error("Invalid column specification");
+                return ptr::null_mut();
+            }
+
+            let name_cstr = CStr::from_ptr(spec.name);
+            let name = match name_cstr.to_str() {
+                Ok(s) => s,
+                Err(_) => {
+                    set_last_error("Invalid UTF-8 column name");
+                    return ptr::null_mut();
+                }
+            };
+
+            let series = match spec.column_type {
+                CColumnType::String => {
+                    let mut values = Vec::new();
+                    if spec.length == 0 {
+                        // Empty column
+                        let empty_values: Vec<Option<String>> = Vec::new();
+                        Series::new(name.into(), empty_values)
+                    } else {
+                        let string_ptrs = spec.data as *const *const c_char;
+                        for j in 0..spec.length {
+                            let str_ptr = *string_ptrs.add(j as usize);
+                            if str_ptr.is_null() {
+                                values.push(None);
+                            } else {
+                                let str_cstr = CStr::from_ptr(str_ptr);
+                                match str_cstr.to_str() {
+                                    Ok(s) => values.push(Some(s.to_string())),
+                                    Err(_) => {
+                                        set_last_error("Invalid UTF-8 string value");
+                                        return ptr::null_mut();
+                                    }
+                                }
+                            }
+                        }
+                        Series::new(name.into(), values)
+                    }
+                }
+                CColumnType::Int64 => {
+                    if spec.length == 0 {
+                        let empty_values: Vec<i64> = Vec::new();
+                        Series::new(name.into(), empty_values)
+                    } else {
+                        let int_data = spec.data as *const i64;
+                        let values: Vec<i64> =
+                            std::slice::from_raw_parts(int_data, spec.length as usize).to_vec();
+                        Series::new(name.into(), values)
+                    }
+                }
+                CColumnType::Float64 => {
+                    if spec.length == 0 {
+                        let empty_values: Vec<f64> = Vec::new();
+                        Series::new(name.into(), empty_values)
+                    } else {
+                        let float_data = spec.data as *const f64;
+                        let values: Vec<f64> =
+                            std::slice::from_raw_parts(float_data, spec.length as usize).to_vec();
+                        Series::new(name.into(), values)
+                    }
+                }
+                CColumnType::Bool => {
+                    if spec.length == 0 {
+                        let empty_values: Vec<bool> = Vec::new();
+                        Series::new(name.into(), empty_values)
+                    } else {
+                        let bool_data = spec.data as *const u8;
+                        let mut values = Vec::new();
+                        for j in 0..spec.length {
+                            let bool_val = *bool_data.add(j as usize) != 0;
+                            values.push(bool_val);
+                        }
+                        Series::new(name.into(), values)
+                    }
+                }
+            };
+
+            series_vec.push(series.into());
+        }
+
+        match DataFrame::new(series_vec) {
+            Ok(df) => polars_df_to_c_df(df),
+            Err(e) => {
+                set_last_error(&format!("Error creating DataFrame: {}", e));
+                ptr::null_mut()
+            }
+        }
+    }
+}

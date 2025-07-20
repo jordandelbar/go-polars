@@ -36,8 +36,12 @@ run-groupby-example:
 run-sorting-example:
 	@cd examples/sorting && go run .
 
+.PHONY: run-dataframe-creation-example
+run-dataframe-creation-example:
+	@cd examples/dataframe_creation && go run .
+
 .PHONY: run-all-examples
-run-all-examples: run-basic-example run-expressions-example run-groupby-example run-sorting-example
+run-all-examples: run-basic-example run-expressions-example run-groupby-example run-sorting-example run-dataframe-creation-example
 	@echo "✅ All examples completed!"
 
 .PHONY: test

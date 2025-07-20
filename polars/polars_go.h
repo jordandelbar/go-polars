@@ -81,4 +81,22 @@ extern CExpr* expr_count();
 extern CDataFrame* sort_by_columns(CDataFrame* df, const char* columns, const char* descending);
 extern CDataFrame* sort_by_exprs(CDataFrame* df, CExpr** exprs, int exprs_len, const char* descending);
 
+// Column type enum for mixed DataFrame creation
+typedef enum {
+    COLUMN_STRING = 0,
+    COLUMN_INT64 = 1,
+    COLUMN_FLOAT64 = 2,
+    COLUMN_BOOL = 3,
+} CColumnType;
+
+// Column specification for mixed DataFrame creation
+typedef struct {
+    const char* name;
+    CColumnType column_type;
+    const void* data;
+    int length;
+} CColumnSpec;
+
+extern CDataFrame* create_dataframe_mixed(const CColumnSpec* column_specs, int column_count);
+
 #endif

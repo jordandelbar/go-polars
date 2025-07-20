@@ -178,6 +178,14 @@ func (e Expr) Gt(value interface{}) Expr {
 		return Expr{ptr: (*C.CExpr)(C.col_gt_f64(e.ptr, C.double(v)))}
 	case float64:
 		return Expr{ptr: (*C.CExpr)(C.col_gt_f64(e.ptr, C.double(v)))}
+	case bool:
+		var intVal int64
+		if v {
+			intVal = 1
+		} else {
+			intVal = 0
+		}
+		return Expr{ptr: (*C.CExpr)(C.col_gt(e.ptr, C.long(intVal)))}
 	default:
 		panic("Gt: unsupported value type")
 	}
@@ -196,6 +204,14 @@ func (e Expr) Lt(value interface{}) Expr {
 		return Expr{ptr: (*C.CExpr)(C.col_lt_f64(e.ptr, C.double(v)))}
 	case float64:
 		return Expr{ptr: (*C.CExpr)(C.col_lt_f64(e.ptr, C.double(v)))}
+	case bool:
+		var intVal int64
+		if v {
+			intVal = 1
+		} else {
+			intVal = 0
+		}
+		return Expr{ptr: (*C.CExpr)(C.col_lt(e.ptr, C.long(intVal)))}
 	default:
 		panic("Lt: unsupported value type")
 	}
@@ -214,6 +230,14 @@ func (e Expr) Eq(value interface{}) Expr {
 		return Expr{ptr: (*C.CExpr)(C.col_eq_f64(e.ptr, C.double(v)))}
 	case float64:
 		return Expr{ptr: (*C.CExpr)(C.col_eq_f64(e.ptr, C.double(v)))}
+	case bool:
+		var intVal int64
+		if v {
+			intVal = 1
+		} else {
+			intVal = 0
+		}
+		return Expr{ptr: (*C.CExpr)(C.col_eq(e.ptr, C.long(intVal)))}
 	default:
 		panic("Eq: unsupported value type")
 	}
@@ -232,6 +256,14 @@ func (e Expr) Ne(value interface{}) Expr {
 		return Expr{ptr: (*C.CExpr)(C.col_ne_f64(e.ptr, C.double(v)))}
 	case float64:
 		return Expr{ptr: (*C.CExpr)(C.col_ne_f64(e.ptr, C.double(v)))}
+	case bool:
+		var intVal int64
+		if v {
+			intVal = 1
+		} else {
+			intVal = 0
+		}
+		return Expr{ptr: (*C.CExpr)(C.col_ne(e.ptr, C.long(intVal)))}
 	default:
 		panic("Ne: unsupported value type")
 	}
@@ -250,6 +282,14 @@ func (e Expr) Ge(value interface{}) Expr {
 		return Expr{ptr: (*C.CExpr)(C.col_ge_f64(e.ptr, C.double(v)))}
 	case float64:
 		return Expr{ptr: (*C.CExpr)(C.col_ge_f64(e.ptr, C.double(v)))}
+	case bool:
+		var intVal int64
+		if v {
+			intVal = 1
+		} else {
+			intVal = 0
+		}
+		return Expr{ptr: (*C.CExpr)(C.col_ge(e.ptr, C.long(intVal)))}
 	default:
 		panic("Ge: unsupported value type")
 	}
@@ -268,6 +308,14 @@ func (e Expr) Le(value interface{}) Expr {
 		return Expr{ptr: (*C.CExpr)(C.col_le_f64(e.ptr, C.double(v)))}
 	case float64:
 		return Expr{ptr: (*C.CExpr)(C.col_le_f64(e.ptr, C.double(v)))}
+	case bool:
+		var intVal int64
+		if v {
+			intVal = 1
+		} else {
+			intVal = 0
+		}
+		return Expr{ptr: (*C.CExpr)(C.col_le(e.ptr, C.long(intVal)))}
 	default:
 		panic("Le: unsupported value type")
 	}
@@ -610,6 +658,213 @@ func (df *DataFrame) Sort(columns ...string) *DataFrame {
 	}
 
 	return &DataFrame{ptr: (*C.CDataFrame)(sortedPtr)}
+}
+
+// DataFrameBuilder provides a fluent API for building DataFrames with mixed column types.
+type DataFrameBuilder struct {
+	columns  []columnSpec
+	rowCount int
+	hasRows  bool
+}
+
+type columnSpec struct {
+	name       string
+	columnType C.CColumnType
+	data       interface{}
+	length     int
+}
+
+// NewDataFrameBuilder creates a new DataFrameBuilder.
+func NewDataFrameBuilder() *DataFrameBuilder {
+	return &DataFrameBuilder{
+		columns: make([]columnSpec, 0),
+	}
+}
+
+// AddStringColumn adds a string column to the DataFrame.
+func (b *DataFrameBuilder) AddStringColumn(name string, values []string) *DataFrameBuilder {
+	if err := b.validateColumnLength(len(values)); err != nil {
+		return b // Could store error for later, but keeping simple for now
+	}
+
+	b.columns = append(b.columns, columnSpec{
+		name:       name,
+		columnType: C.COLUMN_STRING,
+		data:       values,
+		length:     len(values),
+	})
+	return b
+}
+
+// AddIntColumn adds an int64 column to the DataFrame.
+func (b *DataFrameBuilder) AddIntColumn(name string, values []int64) *DataFrameBuilder {
+	if err := b.validateColumnLength(len(values)); err != nil {
+		return b
+	}
+
+	b.columns = append(b.columns, columnSpec{
+		name:       name,
+		columnType: C.COLUMN_INT64,
+		data:       values,
+		length:     len(values),
+	})
+	return b
+}
+
+// AddFloatColumn adds a float64 column to the DataFrame.
+func (b *DataFrameBuilder) AddFloatColumn(name string, values []float64) *DataFrameBuilder {
+	if err := b.validateColumnLength(len(values)); err != nil {
+		return b
+	}
+
+	b.columns = append(b.columns, columnSpec{
+		name:       name,
+		columnType: C.COLUMN_FLOAT64,
+		data:       values,
+		length:     len(values),
+	})
+	return b
+}
+
+// AddBoolColumn adds a boolean column to the DataFrame.
+func (b *DataFrameBuilder) AddBoolColumn(name string, values []bool) *DataFrameBuilder {
+	if err := b.validateColumnLength(len(values)); err != nil {
+		return b
+	}
+
+	b.columns = append(b.columns, columnSpec{
+		name:       name,
+		columnType: C.COLUMN_BOOL,
+		data:       values,
+		length:     len(values),
+	})
+	return b
+}
+
+// validateColumnLength ensures all columns have the same length.
+func (b *DataFrameBuilder) validateColumnLength(length int) error {
+	if !b.hasRows {
+		b.rowCount = length
+		b.hasRows = true
+		return nil
+	}
+
+	if length != b.rowCount {
+		return fmt.Errorf("column length %d does not match expected length %d", length, b.rowCount)
+	}
+
+	return nil
+}
+
+// Build creates the DataFrame from the added columns.
+func (b *DataFrameBuilder) Build() (*DataFrame, error) {
+	if len(b.columns) == 0 {
+		return nil, errors.New("no columns added to builder")
+	}
+
+	// Create C column specifications
+	cSpecs := make([]C.CColumnSpec, len(b.columns))
+	var managedMemory []unsafe.Pointer
+
+	defer func() {
+		// Clean up all allocated memory
+		for _, ptr := range managedMemory {
+			C.free(ptr)
+		}
+	}()
+
+	for i, col := range b.columns {
+		// Set column name
+		cName := C.CString(col.name)
+		managedMemory = append(managedMemory, unsafe.Pointer(cName))
+
+		cSpecs[i].name = cName
+		cSpecs[i].column_type = col.columnType
+		cSpecs[i].length = C.int(col.length)
+
+		// Handle data based on type
+		switch col.columnType {
+		case C.COLUMN_STRING:
+			values := col.data.([]string)
+			if len(values) == 0 {
+				cSpecs[i].data = nil
+			} else {
+				// Create array of C string pointers
+				cStringPtrs := (*C.char)(C.malloc(C.size_t(len(values)) * C.size_t(unsafe.Sizeof(uintptr(0)))))
+				managedMemory = append(managedMemory, unsafe.Pointer(cStringPtrs))
+
+				cStringArray := (*[1 << 30]*C.char)(unsafe.Pointer(cStringPtrs))[:len(values):len(values)]
+				for j, str := range values {
+					cStr := C.CString(str)
+					managedMemory = append(managedMemory, unsafe.Pointer(cStr))
+					cStringArray[j] = cStr
+				}
+				cSpecs[i].data = unsafe.Pointer(cStringPtrs)
+			}
+
+		case C.COLUMN_INT64:
+			values := col.data.([]int64)
+			if len(values) == 0 {
+				cSpecs[i].data = nil
+			} else {
+				cIntData := (*C.longlong)(C.malloc(C.size_t(len(values)) * C.size_t(unsafe.Sizeof(C.longlong(0)))))
+				managedMemory = append(managedMemory, unsafe.Pointer(cIntData))
+
+				cIntArray := (*[1 << 30]C.longlong)(unsafe.Pointer(cIntData))[:len(values):len(values)]
+				for j, val := range values {
+					cIntArray[j] = C.longlong(val)
+				}
+				cSpecs[i].data = unsafe.Pointer(cIntData)
+			}
+
+		case C.COLUMN_FLOAT64:
+			values := col.data.([]float64)
+			if len(values) == 0 {
+				cSpecs[i].data = nil
+			} else {
+				cFloatData := (*C.double)(C.malloc(C.size_t(len(values)) * C.size_t(unsafe.Sizeof(C.double(0)))))
+				managedMemory = append(managedMemory, unsafe.Pointer(cFloatData))
+
+				cFloatArray := (*[1 << 30]C.double)(unsafe.Pointer(cFloatData))[:len(values):len(values)]
+				for j, val := range values {
+					cFloatArray[j] = C.double(val)
+				}
+				cSpecs[i].data = unsafe.Pointer(cFloatData)
+			}
+
+		case C.COLUMN_BOOL:
+			values := col.data.([]bool)
+			if len(values) == 0 {
+				cSpecs[i].data = nil
+			} else {
+				cBoolData := (*C.uchar)(C.malloc(C.size_t(len(values)) * C.size_t(unsafe.Sizeof(C.uchar(0)))))
+				managedMemory = append(managedMemory, unsafe.Pointer(cBoolData))
+
+				cBoolArray := (*[1 << 30]C.uchar)(unsafe.Pointer(cBoolData))[:len(values):len(values)]
+				for j, val := range values {
+					if val {
+						cBoolArray[j] = 1
+					} else {
+						cBoolArray[j] = 0
+					}
+				}
+				cSpecs[i].data = unsafe.Pointer(cBoolData)
+			}
+		}
+	}
+
+	// Call the C function
+	dfPtr := C.create_dataframe_mixed(
+		(*C.CColumnSpec)(unsafe.Pointer(&cSpecs[0])),
+		C.int(len(cSpecs)),
+	)
+
+	if dfPtr == nil {
+		err := errors.New(C.GoString(C.get_last_error_message()))
+		return nil, fmt.Errorf("failed to create DataFrame: %w", err)
+	}
+
+	return &DataFrame{ptr: (*C.CDataFrame)(dfPtr)}, nil
 }
 
 // SortBy sorts the DataFrame by one or more columns with specified sort orders.
