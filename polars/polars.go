@@ -1,4 +1,4 @@
-//go:generate go run setup_binary.go
+//go:generate go run ../../cmd/download/main.go
 
 package polars
 
