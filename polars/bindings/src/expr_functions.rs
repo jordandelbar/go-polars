@@ -388,3 +388,87 @@ pub extern "C" fn expr_std(expr_ptr: *mut CExpr) -> *mut CExpr {
 pub extern "C" fn expr_count() -> *mut CExpr {
     expr_to_c_expr(len().alias("count"))
 }
+
+#[no_mangle]
+pub extern "C" fn col_gt_f64(expr_ptr: *mut CExpr, value: f64) -> *mut CExpr {
+    unsafe {
+        let expr_result = c_expr_to_expr(expr_ptr);
+        match expr_result {
+            Ok(expr) => {
+                let new_expr = expr.clone().gt(lit(value));
+                expr_to_c_expr(new_expr)
+            }
+            Err(_) => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn col_lt_f64(expr_ptr: *mut CExpr, value: f64) -> *mut CExpr {
+    unsafe {
+        let expr_result = c_expr_to_expr(expr_ptr);
+        match expr_result {
+            Ok(expr) => {
+                let new_expr = expr.clone().lt(lit(value));
+                expr_to_c_expr(new_expr)
+            }
+            Err(_) => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn col_eq_f64(expr_ptr: *mut CExpr, value: f64) -> *mut CExpr {
+    unsafe {
+        let expr_result = c_expr_to_expr(expr_ptr);
+        match expr_result {
+            Ok(expr) => {
+                let new_expr = expr.clone().eq(lit(value));
+                expr_to_c_expr(new_expr)
+            }
+            Err(_) => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn col_ne_f64(expr_ptr: *mut CExpr, value: f64) -> *mut CExpr {
+    unsafe {
+        let expr_result = c_expr_to_expr(expr_ptr);
+        match expr_result {
+            Ok(expr) => {
+                let new_expr = expr.clone().neq(lit(value));
+                expr_to_c_expr(new_expr)
+            }
+            Err(_) => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn col_ge_f64(expr_ptr: *mut CExpr, value: f64) -> *mut CExpr {
+    unsafe {
+        let expr_result = c_expr_to_expr(expr_ptr);
+        match expr_result {
+            Ok(expr) => {
+                let new_expr = expr.clone().gt_eq(lit(value));
+                expr_to_c_expr(new_expr)
+            }
+            Err(_) => ptr::null_mut(),
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn col_le_f64(expr_ptr: *mut CExpr, value: f64) -> *mut CExpr {
+    unsafe {
+        let expr_result = c_expr_to_expr(expr_ptr);
+        match expr_result {
+            Ok(expr) => {
+                let new_expr = expr.clone().lt_eq(lit(value));
+                expr_to_c_expr(new_expr)
+            }
+            Err(_) => ptr::null_mut(),
+        }
+    }
+}

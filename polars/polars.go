@@ -166,33 +166,111 @@ func Col(name string) Expr {
 }
 
 // Gt creates a "greater than" expression.
-func (e Expr) Gt(value int64) Expr {
-	return Expr{ptr: (*C.CExpr)(C.col_gt(e.ptr, C.long(value)))}
+func (e Expr) Gt(value interface{}) Expr {
+	switch v := value.(type) {
+	case int:
+		return Expr{ptr: (*C.CExpr)(C.col_gt(e.ptr, C.long(v)))}
+	case int32:
+		return Expr{ptr: (*C.CExpr)(C.col_gt(e.ptr, C.long(v)))}
+	case int64:
+		return Expr{ptr: (*C.CExpr)(C.col_gt(e.ptr, C.long(v)))}
+	case float32:
+		return Expr{ptr: (*C.CExpr)(C.col_gt_f64(e.ptr, C.double(v)))}
+	case float64:
+		return Expr{ptr: (*C.CExpr)(C.col_gt_f64(e.ptr, C.double(v)))}
+	default:
+		panic("Gt: unsupported value type")
+	}
 }
 
 // Lt creates a "less than" expression.
-func (e Expr) Lt(value int64) Expr {
-	return Expr{ptr: (*C.CExpr)(C.col_lt(e.ptr, C.long(value)))}
+func (e Expr) Lt(value interface{}) Expr {
+	switch v := value.(type) {
+	case int:
+		return Expr{ptr: (*C.CExpr)(C.col_lt(e.ptr, C.long(v)))}
+	case int32:
+		return Expr{ptr: (*C.CExpr)(C.col_lt(e.ptr, C.long(v)))}
+	case int64:
+		return Expr{ptr: (*C.CExpr)(C.col_lt(e.ptr, C.long(v)))}
+	case float32:
+		return Expr{ptr: (*C.CExpr)(C.col_lt_f64(e.ptr, C.double(v)))}
+	case float64:
+		return Expr{ptr: (*C.CExpr)(C.col_lt_f64(e.ptr, C.double(v)))}
+	default:
+		panic("Lt: unsupported value type")
+	}
 }
 
 // Eq creates an "equal to" expression.
-func (e Expr) Eq(value int64) Expr {
-	return Expr{ptr: (*C.CExpr)(C.col_eq(e.ptr, C.long(value)))}
+func (e Expr) Eq(value interface{}) Expr {
+	switch v := value.(type) {
+	case int:
+		return Expr{ptr: (*C.CExpr)(C.col_eq(e.ptr, C.long(v)))}
+	case int32:
+		return Expr{ptr: (*C.CExpr)(C.col_eq(e.ptr, C.long(v)))}
+	case int64:
+		return Expr{ptr: (*C.CExpr)(C.col_eq(e.ptr, C.long(v)))}
+	case float32:
+		return Expr{ptr: (*C.CExpr)(C.col_eq_f64(e.ptr, C.double(v)))}
+	case float64:
+		return Expr{ptr: (*C.CExpr)(C.col_eq_f64(e.ptr, C.double(v)))}
+	default:
+		panic("Eq: unsupported value type")
+	}
 }
 
 // Ne creates a "not equal to" expression.
-func (e Expr) Ne(value int64) Expr {
-	return Expr{ptr: (*C.CExpr)(C.col_ne(e.ptr, C.long(value)))}
+func (e Expr) Ne(value interface{}) Expr {
+	switch v := value.(type) {
+	case int:
+		return Expr{ptr: (*C.CExpr)(C.col_ne(e.ptr, C.long(v)))}
+	case int32:
+		return Expr{ptr: (*C.CExpr)(C.col_ne(e.ptr, C.long(v)))}
+	case int64:
+		return Expr{ptr: (*C.CExpr)(C.col_ne(e.ptr, C.long(v)))}
+	case float32:
+		return Expr{ptr: (*C.CExpr)(C.col_ne_f64(e.ptr, C.double(v)))}
+	case float64:
+		return Expr{ptr: (*C.CExpr)(C.col_ne_f64(e.ptr, C.double(v)))}
+	default:
+		panic("Ne: unsupported value type")
+	}
 }
 
 // Ge creates a "greater than or equal to" expression.
-func (e Expr) Ge(value int64) Expr {
-	return Expr{ptr: (*C.CExpr)(C.col_ge(e.ptr, C.long(value)))}
+func (e Expr) Ge(value interface{}) Expr {
+	switch v := value.(type) {
+	case int:
+		return Expr{ptr: (*C.CExpr)(C.col_ge(e.ptr, C.long(v)))}
+	case int32:
+		return Expr{ptr: (*C.CExpr)(C.col_ge(e.ptr, C.long(v)))}
+	case int64:
+		return Expr{ptr: (*C.CExpr)(C.col_ge(e.ptr, C.long(v)))}
+	case float32:
+		return Expr{ptr: (*C.CExpr)(C.col_ge_f64(e.ptr, C.double(v)))}
+	case float64:
+		return Expr{ptr: (*C.CExpr)(C.col_ge_f64(e.ptr, C.double(v)))}
+	default:
+		panic("Ge: unsupported value type")
+	}
 }
 
 // Le creates a "less than or equal to" expression.
-func (e Expr) Le(value int64) Expr {
-	return Expr{ptr: (*C.CExpr)(C.col_le(e.ptr, C.long(value)))}
+func (e Expr) Le(value interface{}) Expr {
+	switch v := value.(type) {
+	case int:
+		return Expr{ptr: (*C.CExpr)(C.col_le(e.ptr, C.long(v)))}
+	case int32:
+		return Expr{ptr: (*C.CExpr)(C.col_le(e.ptr, C.long(v)))}
+	case int64:
+		return Expr{ptr: (*C.CExpr)(C.col_le(e.ptr, C.long(v)))}
+	case float32:
+		return Expr{ptr: (*C.CExpr)(C.col_le_f64(e.ptr, C.double(v)))}
+	case float64:
+		return Expr{ptr: (*C.CExpr)(C.col_le_f64(e.ptr, C.double(v)))}
+	default:
+		panic("Le: unsupported value type")
+	}
 }
 
 // Add creates an addition expression between two expressions.

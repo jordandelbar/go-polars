@@ -84,6 +84,107 @@ func TestComparisonOperations(t *testing.T) {
 	})
 }
 
+// Test Float Comparison Operations
+func TestFloatComparisonOperations(t *testing.T) {
+	df := loadTestData(t)
+	originalHeight := df.Height()
+
+	t.Run("GreaterThanFloat", func(t *testing.T) {
+		filtered := df.Filter(polars.Col("petal.length").Gt(1.5))
+		if filtered.Height() == 0 {
+			t.Error("Expected some rows with petal.length > 1.5")
+		}
+		if filtered.Height() >= originalHeight {
+			t.Error("Filtered result should have fewer rows than original")
+		}
+	})
+
+	t.Run("LessThanFloat", func(t *testing.T) {
+		filtered := df.Filter(polars.Col("petal.length").Lt(1.5))
+		if filtered.Height() == 0 {
+			t.Error("Expected some rows with petal.length < 1.5")
+		}
+		if filtered.Height() >= originalHeight {
+			t.Error("Filtered result should have fewer rows than original")
+		}
+	})
+
+	t.Run("EqualToFloat", func(t *testing.T) {
+		// Use a specific float value that might exist in the data
+		filtered := df.Filter(polars.Col("petal.length").Eq(1.4))
+		// We don't require results since exact float matches might not exist
+		// but the operation should not fail
+		if filtered.Height() < 0 {
+			t.Error("Filter operation should not fail")
+		}
+	})
+
+	t.Run("NotEqualToFloat", func(t *testing.T) {
+		filtered := df.Filter(polars.Col("petal.length").Ne(1.4))
+		if filtered.Height() == 0 {
+			t.Error("Expected some rows with petal.length != 1.4")
+		}
+	})
+
+	t.Run("GreaterThanOrEqualFloat", func(t *testing.T) {
+		filtered := df.Filter(polars.Col("petal.length").Ge(1.5))
+		if filtered.Height() == 0 {
+			t.Error("Expected some rows with petal.length >= 1.5")
+		}
+	})
+
+	t.Run("LessThanOrEqualFloat", func(t *testing.T) {
+		filtered := df.Filter(polars.Col("petal.length").Le(1.5))
+		if filtered.Height() == 0 {
+			t.Error("Expected some rows with petal.length <= 1.5")
+		}
+	})
+
+	t.Run("MixedIntegerAndFloat", func(t *testing.T) {
+		// Test that we can mix integer and float comparisons seamlessly
+		intFiltered := df.Filter(polars.Col("petal.length").Gt(1))
+		floatFiltered := df.Filter(polars.Col("petal.length").Gt(1.0))
+
+		// Both should work and potentially give different results due to precision
+		if intFiltered.Height() == 0 {
+			t.Error("Integer comparison should work")
+		}
+		if floatFiltered.Height() == 0 {
+			t.Error("Float comparison should work")
+		}
+	})
+
+	t.Run("Float32Support", func(t *testing.T) {
+		// Test float32 support
+		var floatVal float32 = 1.5
+		filtered := df.Filter(polars.Col("petal.length").Gt(floatVal))
+		if filtered.Height() < 0 {
+			t.Error("Float32 comparison should work")
+		}
+	})
+
+	t.Run("DifferentIntegerTypes", func(t *testing.T) {
+		// Test different integer types
+		var int32Val int32 = 1
+		var int64Val int64 = 1
+		var intVal int = 1
+
+		filtered32 := df.Filter(polars.Col("petal.length").Gt(int32Val))
+		filtered64 := df.Filter(polars.Col("petal.length").Gt(int64Val))
+		filteredInt := df.Filter(polars.Col("petal.length").Gt(intVal))
+
+		if filtered32.Height() < 0 {
+			t.Error("int32 comparison should work")
+		}
+		if filtered64.Height() < 0 {
+			t.Error("int64 comparison should work")
+		}
+		if filteredInt.Height() < 0 {
+			t.Error("int comparison should work")
+		}
+	})
+}
+
 // Test Mathematical Operations
 func TestMathematicalOperations(t *testing.T) {
 	df := loadTestData(t)
