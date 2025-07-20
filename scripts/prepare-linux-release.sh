@@ -9,13 +9,30 @@ RELEASE_DIR="$PROJECT_ROOT/release"
 
 echo "🚀 Preparing Linux release for go-polars version: $VERSION"
 
-# Check if binary exists
-BINARY_PATH="$PROJECT_ROOT/polars/bin/libpolars_go.so"
-if [[ ! -f "$BINARY_PATH" ]]; then
-    echo "❌ Binary not found at: $BINARY_PATH"
-    echo "💡 Run './build.sh --force' first to build the binary"
+# Recompile Rust bindings to ensure latest version
+echo "🔨 Recompiling Rust bindings..."
+cd "$PROJECT_ROOT"
+if [[ -f "./build.sh" ]]; then
+    echo "📦 Running build script..."
+    ./build.sh --force
+    if [[ $? -ne 0 ]]; then
+        echo "❌ Build failed"
+        exit 1
+    fi
+else
+    echo "❌ Build script not found at: $PROJECT_ROOT/build.sh"
     exit 1
 fi
+
+# Check if binary exists after build
+BINARY_PATH="$PROJECT_ROOT/polars/bin/libpolars_go.so"
+if [[ ! -f "$BINARY_PATH" ]]; then
+    echo "❌ Binary not found at: $BINARY_PATH after build"
+    echo "💡 Check build script output for errors"
+    exit 1
+fi
+
+echo "✅ Binary compilation completed successfully"
 
 # Create release directory
 echo "📁 Creating release directory..."
