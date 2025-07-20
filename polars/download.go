@@ -25,14 +25,14 @@ const (
 	fallbackVersion = "v0.0.19"
 
 	// Binary filenames for different platforms
-	linuxBinary   = "libpolars_go-linux-amd64-%s.so"
-	darwinBinary  = "libpolars_go-darwin-amd64-%s.dylib"
-	windowsBinary = "polars_go-windows-amd64-%s.dll"
+	linuxBinary   = "libpolars_go-linux-amd64-%s.a"
+	darwinBinary  = "libpolars_go-darwin-amd64-%s.a"
+	windowsBinary = "polars_go-windows-amd64-%s.lib"
 
 	// Expected local filenames after download
-	linuxLocalName   = "libpolars_go.so"
-	darwinLocalName  = "libpolars_go.dylib"
-	windowsLocalName = "polars_go.dll"
+	linuxLocalName   = "libpolars_go.a"
+	darwinLocalName  = "libpolars_go.a"
+	windowsLocalName = "polars_go.lib"
 )
 
 // BinaryInfo contains information about a platform binary
@@ -295,11 +295,16 @@ func CleanOldBinaries() error {
 			continue
 		}
 
-		// Remove old versions (files containing version numbers)
+		// Remove old versions (files containing version numbers or old extensions)
 		if strings.Contains(name, "libpolars_go") || strings.Contains(name, "polars_go") {
-			oldPath := filepath.Join(binDir, name)
-			if err := os.Remove(oldPath); err == nil {
-				fmt.Printf("Removed old binary: %s\n", name)
+			// Remove old dynamic libraries and static libraries
+			if strings.HasSuffix(name, ".so") || strings.HasSuffix(name, ".dylib") ||
+				strings.HasSuffix(name, ".dll") || strings.HasSuffix(name, ".a") ||
+				strings.HasSuffix(name, ".lib") {
+				oldPath := filepath.Join(binDir, name)
+				if err := os.Remove(oldPath); err == nil {
+					fmt.Printf("Removed old binary: %s\n", name)
+				}
 			}
 		}
 	}

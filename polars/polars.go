@@ -4,9 +4,9 @@ package polars
 
 /*
 #cgo CFLAGS: -I${SRCDIR}
-#cgo linux LDFLAGS: -L/tmp/go-polars -L${SRCDIR}/bin -lpolars_go -Wl,-rpath=/tmp/go-polars
-#cgo darwin LDFLAGS: -L/tmp/go-polars -L${SRCDIR}/bin -lpolars_go -Wl,-rpath,/tmp/go-polars
-#cgo windows LDFLAGS: -L%TEMP%/go-polars -L${SRCDIR}/bin -lpolars_go
+#cgo linux LDFLAGS: -L${SRCDIR}/bin -lpolars_go -ldl -lm -lpthread
+#cgo darwin LDFLAGS: -L${SRCDIR}/bin -lpolars_go -framework CoreFoundation -framework Security
+#cgo windows LDFLAGS: -L${SRCDIR}/bin -lpolars_go -lws2_32 -luserenv -ladvapi32 -lkernel32
 #include "polars_go.h"
 #include <stdlib.h>
 */

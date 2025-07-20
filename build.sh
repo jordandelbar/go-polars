@@ -15,11 +15,11 @@ needs_rebuild() {
 
     # Determine binary path based on OS
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        binary_path="polars/bin/libpolars_go.so"
+        binary_path="polars/bin/libpolars_go.a"
     elif [[ "$OSTYPE" == "darwin"* ]]; then
-        binary_path="polars/bin/libpolars_go.dylib"
+        binary_path="polars/bin/libpolars_go.a"
     elif [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
-        binary_path="polars/bin/polars_go.dll"
+        binary_path="polars/bin/polars_go.lib"
     fi
 
     # Check if binary exists
@@ -116,14 +116,14 @@ echo "📦 Copying binary to bin directory..."
 cd "$SCRIPT_DIR"
 
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    cp polars/bindings/target/release/libpolars_go.so polars/bin/libpolars_go.so
-    echo "✅ Linux library built successfully!"
+    cp polars/bindings/target/release/libpolars_go.a polars/bin/libpolars_go.a
+    echo "✅ Linux static library built successfully!"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-    cp polars/bindings/target/release/libpolars_go.dylib polars/bin/libpolars_go.dylib
-    echo "✅ macOS library built successfully!"
+    cp polars/bindings/target/release/libpolars_go.a polars/bin/libpolars_go.a
+    echo "✅ macOS static library built successfully!"
 elif [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
-    cp polars/bindings/target/release/polars_go.dll polars/bin/polars_go.dll
-    echo "✅ Windows library built successfully!"
+    cp polars/bindings/target/release/polars_go.lib polars/bin/polars_go.lib
+    echo "✅ Windows static library built successfully!"
 else
     echo "❌ Unsupported operating system: $OSTYPE"
     exit 1

@@ -46,10 +46,12 @@ go.work.sum
 # env file
 .env
 
-# Compiled binaries (users should build these locally)
+# Compiled binaries (downloaded via go:generate)
 polars/bin/libpolars_go.so
 polars/bin/libpolars_go.dylib
 polars/bin/polars_go.dll
+polars/bin/libpolars_go.a
+polars/bin/polars_go.lib
 
 # Build timestamp
 polars/bin/.build_timestamp
