@@ -26,11 +26,11 @@ fi
 
 # Create the release
 gh release create "$VERSION" \
-    --title "Release $VERSION - Linux Binary" \
+    --title "Release $VERSION - Linux Static Library" \
     --notes-file "RELEASE_NOTES.md" \
-    libpolars_go-linux-amd64-*.so \
-    libpolars_go-linux-amd64-*.so.sha256 \
-    libpolars_go-linux-amd64-*.so.md5
+    libpolars_go-linux-amd64-*.a \
+    libpolars_go-linux-amd64-*.a.sha256 \
+    libpolars_go-linux-amd64-*.a.md5
 
 echo "✅ Release created successfully!"
 echo "🌐 View at: https://github.com/$(gh repo view --json owner,name -q '.owner.login + "/" + .name')/releases/tag/$VERSION"

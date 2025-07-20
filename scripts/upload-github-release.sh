@@ -147,7 +147,7 @@ cd "$RELEASE_DIR"
 
 # Check for required files
 REQUIRED_FILES=(
-    "*.so"
+    "*.a"
     "*.sha256"
     "*.md5"
     "RELEASE_NOTES.md"
@@ -175,7 +175,7 @@ fi
 
 # List files to be uploaded
 echo -e "${GREEN}✅ Files ready for upload:${NC}"
-ls -la *.so *.sha256 *.md5 2>/dev/null || true
+ls -la *.a *.sha256 *.md5 2>/dev/null || true
 echo
 
 # Confirm upload
@@ -217,7 +217,7 @@ GH_CMD="$GH_CMD --title \"$TITLE\""
 GH_CMD="$GH_CMD --notes-file \"RELEASE_NOTES.md\""
 
 # Add files
-for file in *.so *.sha256 *.md5; do
+for file in *.a *.sha256 *.md5; do
     if [[ -f "$file" ]]; then
         GH_CMD="$GH_CMD \"$file\""
     fi

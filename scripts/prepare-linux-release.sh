@@ -25,7 +25,7 @@ else
 fi
 
 # Check if binary exists after build
-BINARY_PATH="$PROJECT_ROOT/polars/bin/libpolars_go.so"
+BINARY_PATH="$PROJECT_ROOT/polars/bin/libpolars_go.a"
 if [[ ! -f "$BINARY_PATH" ]]; then
     echo "❌ Binary not found at: $BINARY_PATH after build"
     echo "💡 Check build script output for errors"
@@ -39,8 +39,8 @@ echo "📁 Creating release directory..."
 rm -rf "$RELEASE_DIR"
 mkdir -p "$RELEASE_DIR"
 
-# Copy and rename the binary
-RELEASE_BINARY="$RELEASE_DIR/libpolars_go-linux-amd64-${VERSION}.so"
+# Copy and rename the static library
+RELEASE_BINARY="$RELEASE_DIR/libpolars_go-linux-amd64-${VERSION}.a"
 cp "$BINARY_PATH" "$RELEASE_BINARY"
 
 # Get binary info
@@ -48,7 +48,7 @@ BINARY_SIZE=$(du -h "$RELEASE_BINARY" | cut -f1)
 BINARY_MD5=$(md5sum "$RELEASE_BINARY" | cut -d' ' -f1)
 BINARY_SHA256=$(sha256sum "$RELEASE_BINARY" | cut -d' ' -f1)
 
-echo "✅ Binary copied: $(basename "$RELEASE_BINARY") (${BINARY_SIZE})"
+echo "✅ Static library copied: $(basename "$RELEASE_BINARY") (${BINARY_SIZE})"
 
 # Create checksums file
 echo "🔐 Generating checksums..."
@@ -61,7 +61,7 @@ RELEASE_NOTES="$RELEASE_DIR/RELEASE_NOTES.md"
 cat > "$RELEASE_NOTES" << EOF
 # go-polars Linux Release $VERSION
 
-## Binary Information
+## Static Library Information
 
 - **File**: \`$(basename "$RELEASE_BINARY")\`
 - **Platform**: Linux x86_64
@@ -71,7 +71,7 @@ cat > "$RELEASE_NOTES" << EOF
 
 ## Verification
 
-1. Download the binary file
+1. Download the static library file
 2. Verify the checksum:
    \`\`\`bash
    sha256sum -c $(basename "$RELEASE_BINARY").sha256
@@ -117,11 +117,11 @@ fi
 
 # Create the release
 gh release create "$VERSION" \
-    --title "Release $VERSION - Linux Binary" \
+    --title "Release $VERSION - Linux Static Library" \
     --notes-file "RELEASE_NOTES.md" \
-    libpolars_go-linux-amd64-*.so \
-    libpolars_go-linux-amd64-*.so.sha256 \
-    libpolars_go-linux-amd64-*.so.md5
+    libpolars_go-linux-amd64-*.a \
+    libpolars_go-linux-amd64-*.a.sha256 \
+    libpolars_go-linux-amd64-*.a.md5
 
 echo "✅ Release created successfully!"
 echo "🌐 View at: https://github.com/$(gh repo view --json owner,name -q '.owner.login + "/" + .name')/releases/tag/$VERSION"
