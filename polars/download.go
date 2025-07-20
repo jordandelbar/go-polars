@@ -22,7 +22,7 @@ const (
 	latestReleaseAPI = "https://api.github.com/repos/jordandelbar/go-polars/releases/latest"
 
 	// Fallback version if API fails
-	fallbackVersion = "v0.0.16"
+	fallbackVersion = "v0.0.17"
 
 	// Binary filenames for different platforms
 	linuxBinary   = "libpolars_go-linux-amd64-%s.so"

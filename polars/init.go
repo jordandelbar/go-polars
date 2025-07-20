@@ -3,6 +3,7 @@ package polars
 import (
 	"fmt"
 	"log"
+	"os"
 	"sync"
 )
 
@@ -12,7 +13,6 @@ var (
 )
 
 // init is called automatically when the package is imported
-// Binary setup is now handled by go:generate before compilation
 func init() {
 	initOnce.Do(func() {
 		initErr = initializePolars()
@@ -20,20 +20,28 @@ func init() {
 
 	if initErr != nil {
 		log.Printf("go-polars initialization failed: %v", initErr)
-		log.Printf("Binary should have been set up by go:generate. If this fails, please run: go generate")
+		log.Printf("You may need to run: go generate or build from source")
 	}
 }
 
-// initializePolars performs minimal runtime checks since binary setup is done at build time
+// initializePolars performs runtime setup including binary download if needed
 func initializePolars() error {
-	// Quick sanity check that binary exists (it should already be there from go:generate)
-	exists, _, err := CheckBinaryExists()
-	if err != nil {
-		return fmt.Errorf("failed to check binary existence: %w", err)
+	// Check if we should skip download
+	if os.Getenv("GO_POLARS_SKIP_DOWNLOAD") == "true" {
+		// Still check if binary exists when skipping download
+		exists, _, err := CheckBinaryExists()
+		if err != nil {
+			return fmt.Errorf("failed to check binary existence: %w", err)
+		}
+		if !exists {
+			return fmt.Errorf("binary not found and download is disabled (GO_POLARS_SKIP_DOWNLOAD=true)")
+		}
+		return nil
 	}
 
-	if !exists {
-		return fmt.Errorf("binary not found - go:generate should have downloaded it. Try running: go generate")
+	// Ensure binary exists, downloading it if necessary
+	if err := EnsureBinary(); err != nil {
+		return fmt.Errorf("failed to ensure binary availability: %w", err)
 	}
 
 	return nil
