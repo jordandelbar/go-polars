@@ -4,18 +4,28 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-crate-type = ["cdylib", "staticlib"]
+crate-type = ["staticlib"]
 
 [dependencies]
-polars = { version = "0.46", features = [
+polars = { version = "0.46", default-features = false, features = [
     "csv",
-    "polars-io",
     "lazy",
     "parquet",
     "strings",
-    "dtype-full",
 ] }
 lazy_static = "1.5"
 
 [profile.release]
 strip = true
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+opt-level = "z"
+debug = false
+debug-assertions = false
+overflow-checks = false
+incremental = false
+
+[profile.release.package."*"]
+opt-level = "z"
+debug = false
