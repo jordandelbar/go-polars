@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 set -e
 
@@ -39,7 +39,7 @@ VERSION=""
 FORCE=false
 SKIP_VERIFY=false
 
-while [[ $# -gt 0 ]]; do
+while [ $# -gt 0 ]; do
     case $1 in
         --version)
             VERSION="$2"
@@ -88,7 +88,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Set default version if not specified
-if [[ -z "$VERSION" ]]; then
+if [ -z "$VERSION" ]; then
     VERSION="$DEFAULT_VERSION"
 fi
 
@@ -96,7 +96,7 @@ fi
 check_environment() {
     local current_dir=$(basename "$PWD")
 
-    if [[ ! -f "go.mod" && "$current_dir" == "/" ]]; then
+    if [ ! -f "go.mod" ] && [ "$current_dir" = "/" ]; then
         log_error "Please run this script from your Go project directory"
         log_info "If this is a new project, create it first:"
         log_info "  mkdir my-project && cd my-project"
@@ -146,22 +146,22 @@ detect_platform() {
 
 # Check dependencies
 check_dependencies() {
-    local missing_deps=()
+    local missing_deps=""
 
     if ! command -v curl >/dev/null 2>&1; then
-        missing_deps+=("curl")
+        missing_deps="$missing_deps curl"
     fi
 
     if ! command -v go >/dev/null 2>&1; then
-        missing_deps+=("go")
+        missing_deps="$missing_deps go"
     fi
 
     if ! command -v sha256sum >/dev/null 2>&1 && ! command -v shasum >/dev/null 2>&1; then
-        missing_deps+=("sha256sum or shasum")
+        missing_deps="$missing_deps sha256sum_or_shasum"
     fi
 
-    if [[ ${#missing_deps[@]} -gt 0 ]]; then
-        log_error "Missing required dependencies: ${missing_deps[*]}"
+    if [ -n "$missing_deps" ]; then
+        log_error "Missing required dependencies:$missing_deps"
         exit 1
     fi
 }
@@ -183,7 +183,7 @@ verify_checksum() {
     local file="$1"
     local checksum_file="$2"
 
-    if [[ "$SKIP_VERIFY" == "true" ]]; then
+    if [ "$SKIP_VERIFY" = "true" ]; then
         log_warning "Skipping checksum verification"
         return 0
     fi
@@ -203,7 +203,7 @@ verify_checksum() {
         return 1
     fi
 
-    if [[ "$expected_checksum" == "$actual_checksum" ]]; then
+    if [ "$expected_checksum" = "$actual_checksum" ]; then
         log_success "Checksum verification passed"
         return 0
     else
@@ -219,7 +219,7 @@ setup_polars_package() {
     log_info "Setting up polars package..."
 
     # Download polars package files if they don't exist
-    if [[ ! -d "polars" || "$FORCE" == "true" ]]; then
+    if [ ! -d "polars" ] || [ "$FORCE" = "true" ]; then
         log_info "Downloading polars package files..."
 
         local temp_archive="/tmp/go-polars-${VERSION}.tar.gz"
@@ -257,7 +257,7 @@ setup_binary() {
     local binary_file="polars/bin/$BINARY_NAME"
 
     # Check if binary already exists
-    if [[ -f "$binary_file" && "$FORCE" != "true" ]]; then
+    if [ -f "$binary_file" ] && [ "$FORCE" != "true" ]; then
         log_success "Binary already exists at $binary_file"
         return 0
     fi
@@ -307,7 +307,7 @@ setup_binary() {
 # Setup Go module
 setup_go_module() {
     # Initialize go.mod if it doesn't exist
-    if [[ ! -f "go.mod" ]]; then
+    if [ ! -f "go.mod" ]; then
         local project_name=$(basename "$PWD")
         log_info "Initializing Go module: $project_name"
         go mod init "$project_name"
@@ -322,7 +322,7 @@ setup_go_module() {
 
 # Create example file
 create_example() {
-    if [[ ! -f "example.go" || "$FORCE" == "true" ]]; then
+    if [ ! -f "example.go" ] || [ "$FORCE" = "true" ]; then
         log_info "Creating example file..."
         cat > example.go << 'EOF'
 package main

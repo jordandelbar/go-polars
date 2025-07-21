@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 set -e
 
@@ -40,7 +40,7 @@ VERSION=""
 FORCE=false
 SKIP_VERIFY=false
 
-while [[ $# -gt 0 ]]; do
+while [ $# -gt 0 ]; do
     case $1 in
         --version)
             VERSION="$2"
@@ -88,7 +88,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Set default version if not specified
-if [[ -z "$VERSION" ]]; then
+if [ -z "$VERSION" ]; then
     VERSION="$DEFAULT_VERSION"
 fi
 
@@ -131,18 +131,18 @@ detect_platform() {
 
 # Check if required tools are available
 check_dependencies() {
-    local missing_deps=()
+    local missing_deps=""
 
     if ! command -v curl >/dev/null 2>&1; then
-        missing_deps+=("curl")
+        missing_deps="$missing_deps curl"
     fi
 
     if ! command -v sha256sum >/dev/null 2>&1 && ! command -v shasum >/dev/null 2>&1; then
-        missing_deps+=("sha256sum or shasum")
+        missing_deps="$missing_deps sha256sum_or_shasum"
     fi
 
-    if [[ ${#missing_deps[@]} -gt 0 ]]; then
-        log_error "Missing required dependencies: ${missing_deps[*]}"
+    if [ -n "$missing_deps" ]; then
+        log_error "Missing required dependencies:$missing_deps"
         log_info "Please install the missing dependencies and try again"
         exit 1
     fi
@@ -165,7 +165,7 @@ verify_checksum() {
     local file="$1"
     local checksum_file="$2"
 
-    if [[ "$SKIP_VERIFY" == "true" ]]; then
+    if [ "$SKIP_VERIFY" = "true" ]; then
         log_warning "Skipping checksum verification"
         return 0
     fi
@@ -187,7 +187,7 @@ verify_checksum() {
         return 1
     fi
 
-    if [[ "$expected_checksum" == "$actual_checksum" ]]; then
+    if [ "$expected_checksum" = "$actual_checksum" ]; then
         log_success "Checksum verification passed"
         return 0
     else
@@ -213,7 +213,7 @@ install_library() {
     check_dependencies
 
     # Currently only Linux AMD64 is supported in releases
-    if [[ "$platform" != "linux-amd64" ]]; then
+    if [ "$platform" != "linux-amd64" ]; then
         log_error "Precompiled binaries are currently only available for Linux AMD64"
         log_info "For other platforms, please build from source:"
         log_info "  git clone https://github.com/$REPO.git"
@@ -224,14 +224,14 @@ install_library() {
     fi
 
     # Create install directory
-    if [[ ! -d "$INSTALL_DIR" ]]; then
+    if [ ! -d "$INSTALL_DIR" ]; then
         log_info "Creating directory: $INSTALL_DIR"
         mkdir -p "$INSTALL_DIR"
     fi
 
     # Check if library already exists
     local target_file="$INSTALL_DIR/$BINARY_NAME"
-    if [[ -f "$target_file" && "$FORCE" != "true" ]]; then
+    if [ -f "$target_file" ] && [ "$FORCE" != "true" ]; then
         log_success "Library already exists at $target_file"
         log_info "Use --force to reinstall"
         exit 0
@@ -265,7 +265,7 @@ install_library() {
     fi
 
     # Verify checksum
-    if [[ "$SKIP_VERIFY" != "true" ]]; then
+    if [ "$SKIP_VERIFY" != "true" ]; then
         if ! verify_checksum "$temp_library" "$temp_checksum"; then
             exit 1
         fi
@@ -280,7 +280,7 @@ install_library() {
     log_info "Library installed at: $target_file"
 
     # Provide setup instructions
-    if [[ -f "go.mod" ]]; then
+    if [ -f "go.mod" ]; then
         log_success "Detected Go module!"
         log_info "To use go-polars in your project:"
         log_info "  1. Add a replace directive to your go.mod:"
