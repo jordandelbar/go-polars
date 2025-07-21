@@ -29,9 +29,7 @@ https://github.com/pola-rs/polars
 > sha256sum -c libpolars_go-linux-amd64-v0.1.0.so.sha256
 > ```
 
-### Quick Start (Recommended)
-
-**Option 1: Complete Setup Script (Linux x86_64)**
+### Quick Start
 
 For the easiest setup experience, use our setup script that downloads both the package and precompiled binary:
 
@@ -45,17 +43,7 @@ This script will:
 - Configure your Go module with the necessary replace directives
 - Create an example file to test your installation
 
-**Option 2: Manual Setup**
-
-Simply add go-polars to your project:
-
-```bash
-go mod init your-project
-go get github.com/jordandelbar/go-polars
-```
-
-> [!IMPORTANT]
-> With manual setup, you'll need to build the binary yourself or use our standalone install script
+### Example
 
 ```go
 package main
@@ -82,18 +70,6 @@ func main() {
 🚧 **Coming soon**:
 - macOS x86_64 and ARM64
 - Windows x86_64
-
-The library automatically downloads the appropriate binary for your platform from [GitHub Releases](https://github.com/jordandelbar/go-polars/releases).
-
-### Standalone Binary Installation
-
-If you want to add just the precompiled binary to an existing project:
-
-```bash
-curl -sSL https://raw.githubusercontent.com/jordandelbar/go-polars/main/scripts/install.sh | sh
-```
-
-This installs only the binary to `polars/bin/` in your current directory.
 
 ### Alternative: Build from Source
 
