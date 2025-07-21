@@ -12,6 +12,7 @@ polars = { version = "0.46", default-features = false, features = [
     "lazy",
     "parquet",
     "strings",
+    "fmt",
 ] }
 lazy_static = "1.5"
 

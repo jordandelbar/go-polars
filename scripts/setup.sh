@@ -7,7 +7,7 @@ set -e
 # Usage: curl -sSL https://raw.githubusercontent.com/jordandelbar/go-polars/main/scripts/setup.sh | sh
 
 REPO="jordandelbar/go-polars"
-DEFAULT_VERSION="v0.0.23"
+DEFAULT_VERSION="v0.0.25"
 BINARY_NAME="libpolars_go.a"
 
 # Colors for output
