@@ -660,3 +660,209 @@ pub extern "C" fn create_dataframe_mixed(
         }
     }
 }
+
+// Join type enum
+#[repr(C)]
+pub enum CJoinType {
+    Inner = 0,
+    Left = 1,
+    Right = 2,
+    Outer = 3,
+}
+
+impl From<CJoinType> for JoinType {
+    fn from(join_type: CJoinType) -> Self {
+        match join_type {
+            CJoinType::Inner => JoinType::Inner,
+            CJoinType::Left => JoinType::Left,
+            CJoinType::Right => JoinType::Right,
+            CJoinType::Outer => JoinType::Full,
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn join_dataframes(
+    left_df: *mut CDataFrame,
+    right_df: *mut CDataFrame,
+    left_on: *const c_char,
+    right_on: *const c_char,
+    join_type: CJoinType,
+) -> *mut CDataFrame {
+    if left_df.is_null() || right_df.is_null() {
+        set_last_error("DataFrame pointers cannot be null");
+        return ptr::null_mut();
+    }
+
+    let left_on_str = unsafe {
+        match CStr::from_ptr(left_on).to_str() {
+            Ok(s) => s,
+            Err(_) => {
+                set_last_error("Invalid UTF-8 in left_on column name");
+                return ptr::null_mut();
+            }
+        }
+    };
+
+    let right_on_str = unsafe {
+        match CStr::from_ptr(right_on).to_str() {
+            Ok(s) => s,
+            Err(_) => {
+                set_last_error("Invalid UTF-8 in right_on column name");
+                return ptr::null_mut();
+            }
+        }
+    };
+
+    let left_df_rc = match unsafe { c_df_to_polars_df_ref(left_df) } {
+        Ok(rc) => rc,
+        Err(e) => {
+            set_last_error(&format!("Failed to get left DataFrame: {}", e));
+            return ptr::null_mut();
+        }
+    };
+
+    let left_df_guard = match left_df_rc.try_borrow() {
+        Ok(guard) => guard,
+        Err(_) => {
+            set_last_error("Failed to borrow left DataFrame");
+            return ptr::null_mut();
+        }
+    };
+
+    let right_df_rc = match unsafe { c_df_to_polars_df_ref(right_df) } {
+        Ok(rc) => rc,
+        Err(e) => {
+            set_last_error(&format!("Failed to get right DataFrame: {}", e));
+            return ptr::null_mut();
+        }
+    };
+
+    let right_df_guard = match right_df_rc.try_borrow() {
+        Ok(guard) => guard,
+        Err(_) => {
+            set_last_error("Failed to borrow right DataFrame");
+            return ptr::null_mut();
+        }
+    };
+
+    let join_result = left_df_guard
+        .clone()
+        .lazy()
+        .join(
+            right_df_guard.clone().lazy(),
+            [col(left_on_str)],
+            [col(right_on_str)],
+            JoinArgs::new(join_type.into())
+                .with_suffix(Some("_right".into()))
+                .with_coalesce(JoinCoalesce::default()),
+        )
+        .collect();
+
+    match join_result {
+        Ok(result_df) => polars_df_to_c_df(result_df),
+        Err(e) => {
+            set_last_error(&format!("Join operation failed: {}", e));
+            ptr::null_mut()
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn join_dataframes_multiple_keys(
+    left_df: *mut CDataFrame,
+    right_df: *mut CDataFrame,
+    left_on: *const c_char,
+    right_on: *const c_char,
+    join_type: CJoinType,
+) -> *mut CDataFrame {
+    if left_df.is_null() || right_df.is_null() {
+        set_last_error("DataFrame pointers cannot be null");
+        return ptr::null_mut();
+    }
+
+    let left_on_str = unsafe {
+        match CStr::from_ptr(left_on).to_str() {
+            Ok(s) => s,
+            Err(_) => {
+                set_last_error("Invalid UTF-8 in left_on column names");
+                return ptr::null_mut();
+            }
+        }
+    };
+
+    let right_on_str = unsafe {
+        match CStr::from_ptr(right_on).to_str() {
+            Ok(s) => s,
+            Err(_) => {
+                set_last_error("Invalid UTF-8 in right_on column names");
+                return ptr::null_mut();
+            }
+        }
+    };
+
+    // Parse comma-separated column names
+    let left_cols: Vec<&str> = left_on_str.split(',').map(|s| s.trim()).collect();
+    let right_cols: Vec<&str> = right_on_str.split(',').map(|s| s.trim()).collect();
+
+    if left_cols.len() != right_cols.len() {
+        set_last_error("Number of left_on and right_on columns must match");
+        return ptr::null_mut();
+    }
+
+    let left_df_rc = match unsafe { c_df_to_polars_df_ref(left_df) } {
+        Ok(rc) => rc,
+        Err(e) => {
+            set_last_error(&format!("Failed to get left DataFrame: {}", e));
+            return ptr::null_mut();
+        }
+    };
+
+    let left_df_guard = match left_df_rc.try_borrow() {
+        Ok(guard) => guard,
+        Err(_) => {
+            set_last_error("Failed to borrow left DataFrame");
+            return ptr::null_mut();
+        }
+    };
+
+    let right_df_rc = match unsafe { c_df_to_polars_df_ref(right_df) } {
+        Ok(rc) => rc,
+        Err(e) => {
+            set_last_error(&format!("Failed to get right DataFrame: {}", e));
+            return ptr::null_mut();
+        }
+    };
+
+    let right_df_guard = match right_df_rc.try_borrow() {
+        Ok(guard) => guard,
+        Err(_) => {
+            set_last_error("Failed to borrow right DataFrame");
+            return ptr::null_mut();
+        }
+    };
+
+    let left_exprs: Vec<Expr> = left_cols.iter().map(|&col_name| col(col_name)).collect();
+    let right_exprs: Vec<Expr> = right_cols.iter().map(|&col_name| col(col_name)).collect();
+
+    let join_result = left_df_guard
+        .clone()
+        .lazy()
+        .join(
+            right_df_guard.clone().lazy(),
+            left_exprs,
+            right_exprs,
+            JoinArgs::new(join_type.into())
+                .with_suffix(Some("_right".into()))
+                .with_coalesce(JoinCoalesce::default()),
+        )
+        .collect();
+
+    match join_result {
+        Ok(result_df) => polars_df_to_c_df(result_df),
+        Err(e) => {
+            set_last_error(&format!("Join operation failed: {}", e));
+            ptr::null_mut()
+        }
+    }
+}

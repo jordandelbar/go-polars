@@ -9,7 +9,7 @@ import (
 // Test DataFrameBuilder Basic Functionality
 func TestDataFrameBuilderBasic(t *testing.T) {
 	t.Run("CreateMixedDataFrame", func(t *testing.T) {
-		df, err := polars.NewDataFrameBuilder().
+		df, err := polars.NewDataFrame().
 			AddStringColumn("name", []string{"Alice", "Bob", "Charlie"}).
 			AddIntColumn("age", []int64{25, 30, 35}).
 			AddFloatColumn("salary", []float64{50000.5, 60000.75, 70000.25}).
@@ -42,7 +42,7 @@ func TestDataFrameBuilderBasic(t *testing.T) {
 	})
 
 	t.Run("StringOnlyDataFrame", func(t *testing.T) {
-		df, err := polars.NewDataFrameBuilder().
+		df, err := polars.NewDataFrame().
 			AddStringColumn("first_name", []string{"John", "Jane", "Bob"}).
 			AddStringColumn("last_name", []string{"Doe", "Smith", "Johnson"}).
 			Build()
@@ -61,7 +61,7 @@ func TestDataFrameBuilderBasic(t *testing.T) {
 	})
 
 	t.Run("NumericOnlyDataFrame", func(t *testing.T) {
-		df, err := polars.NewDataFrameBuilder().
+		df, err := polars.NewDataFrame().
 			AddIntColumn("id", []int64{1, 2, 3, 4}).
 			AddFloatColumn("score", []float64{85.5, 92.0, 78.5, 95.5}).
 			Build()
@@ -80,7 +80,7 @@ func TestDataFrameBuilderBasic(t *testing.T) {
 	})
 
 	t.Run("BooleanOnlyDataFrame", func(t *testing.T) {
-		df, err := polars.NewDataFrameBuilder().
+		df, err := polars.NewDataFrame().
 			AddBoolColumn("is_active", []bool{true, false, true}).
 			AddBoolColumn("is_admin", []bool{false, true, false}).
 			Build()
@@ -102,7 +102,7 @@ func TestDataFrameBuilderBasic(t *testing.T) {
 // Test DataFrameBuilder Error Cases
 func TestDataFrameBuilderErrors(t *testing.T) {
 	t.Run("EmptyBuilder", func(t *testing.T) {
-		_, err := polars.NewDataFrameBuilder().Build()
+		_, err := polars.NewDataFrame().Build()
 
 		if err == nil {
 			t.Error("Expected error when building empty DataFrame")
@@ -111,7 +111,7 @@ func TestDataFrameBuilderErrors(t *testing.T) {
 
 	t.Run("MismatchedColumnLengths", func(t *testing.T) {
 		// This should fail during Build() due to mismatched lengths
-		df, err := polars.NewDataFrameBuilder().
+		df, err := polars.NewDataFrame().
 			AddStringColumn("name", []string{"Alice", "Bob"}).
 			AddIntColumn("age", []int64{25, 30, 35}). // Different length
 			Build()
@@ -127,7 +127,7 @@ func TestDataFrameBuilderErrors(t *testing.T) {
 	})
 
 	t.Run("SingleEmptyColumn", func(t *testing.T) {
-		df, err := polars.NewDataFrameBuilder().
+		df, err := polars.NewDataFrame().
 			AddStringColumn("empty", []string{}).
 			Build()
 
@@ -144,7 +144,7 @@ func TestDataFrameBuilderErrors(t *testing.T) {
 // Test DataFrameBuilder Edge Cases
 func TestDataFrameBuilderEdgeCases(t *testing.T) {
 	t.Run("SingleRow", func(t *testing.T) {
-		df, err := polars.NewDataFrameBuilder().
+		df, err := polars.NewDataFrame().
 			AddStringColumn("name", []string{"Alice"}).
 			AddIntColumn("age", []int64{25}).
 			AddFloatColumn("salary", []float64{50000.0}).
@@ -178,7 +178,7 @@ func TestDataFrameBuilderEdgeCases(t *testing.T) {
 			active[i] = i%2 == 0
 		}
 
-		df, err := polars.NewDataFrameBuilder().
+		df, err := polars.NewDataFrame().
 			AddStringColumn("name", names).
 			AddIntColumn("age", ages).
 			AddFloatColumn("salary", salaries).
@@ -199,7 +199,7 @@ func TestDataFrameBuilderEdgeCases(t *testing.T) {
 	})
 
 	t.Run("SpecialStringValues", func(t *testing.T) {
-		df, err := polars.NewDataFrameBuilder().
+		df, err := polars.NewDataFrame().
 			AddStringColumn("special", []string{"", "null", "NaN", "unicode: 🚀", "newline\ntest"}).
 			AddIntColumn("id", []int64{1, 2, 3, 4, 5}).
 			Build()
@@ -214,7 +214,7 @@ func TestDataFrameBuilderEdgeCases(t *testing.T) {
 	})
 
 	t.Run("ExtremeNumericValues", func(t *testing.T) {
-		df, err := polars.NewDataFrameBuilder().
+		df, err := polars.NewDataFrame().
 			AddIntColumn("int_vals", []int64{-9223372036854775808, 0, 9223372036854775807}).
 			AddFloatColumn("float_vals", []float64{-1.7976931348623157e+308, 0.0, 1.7976931348623157e+308}).
 			Build()
@@ -232,7 +232,7 @@ func TestDataFrameBuilderEdgeCases(t *testing.T) {
 // Test DataFrameBuilder Integration with Other Operations
 func TestDataFrameBuilderIntegration(t *testing.T) {
 	t.Run("FilterAfterBuild", func(t *testing.T) {
-		df, err := polars.NewDataFrameBuilder().
+		df, err := polars.NewDataFrame().
 			AddStringColumn("name", []string{"Alice", "Bob", "Charlie"}).
 			AddIntColumn("age", []int64{25, 30, 35}).
 			Build()
@@ -248,7 +248,7 @@ func TestDataFrameBuilderIntegration(t *testing.T) {
 	})
 
 	t.Run("SelectAfterBuild", func(t *testing.T) {
-		df, err := polars.NewDataFrameBuilder().
+		df, err := polars.NewDataFrame().
 			AddStringColumn("name", []string{"Alice", "Bob"}).
 			AddIntColumn("age", []int64{25, 30}).
 			AddFloatColumn("salary", []float64{50000.0, 60000.0}).
@@ -265,7 +265,7 @@ func TestDataFrameBuilderIntegration(t *testing.T) {
 	})
 
 	t.Run("WithColumnsAfterBuild", func(t *testing.T) {
-		df, err := polars.NewDataFrameBuilder().
+		df, err := polars.NewDataFrame().
 			AddStringColumn("name", []string{"Alice", "Bob"}).
 			AddIntColumn("age", []int64{25, 30}).
 			Build()
@@ -281,7 +281,7 @@ func TestDataFrameBuilderIntegration(t *testing.T) {
 	})
 
 	t.Run("ChainedOperations", func(t *testing.T) {
-		df, err := polars.NewDataFrameBuilder().
+		df, err := polars.NewDataFrame().
 			AddStringColumn("name", []string{"Alice", "Bob", "Charlie", "David"}).
 			AddIntColumn("age", []int64{25, 30, 35, 40}).
 			AddFloatColumn("salary", []float64{50000.0, 60000.0, 70000.0, 80000.0}).
@@ -311,7 +311,7 @@ func TestDataFrameBuilderIntegration(t *testing.T) {
 func TestDataFrameBuilderChaining(t *testing.T) {
 	t.Run("FluentAPI", func(t *testing.T) {
 		// Test that all Add methods return the builder for chaining
-		builder := polars.NewDataFrameBuilder()
+		builder := polars.NewDataFrame()
 
 		// Chain should work smoothly
 		df, err := builder.
@@ -332,7 +332,7 @@ func TestDataFrameBuilderChaining(t *testing.T) {
 
 	t.Run("ReuseBuilder", func(t *testing.T) {
 		// Test that we can't accidentally reuse a builder
-		builder := polars.NewDataFrameBuilder().
+		builder := polars.NewDataFrame().
 			AddStringColumn("name", []string{"Alice"}).
 			AddIntColumn("age", []int64{25})
 
@@ -359,7 +359,7 @@ func TestDataFrameBuilderChaining(t *testing.T) {
 // Test DataFrameBuilder Memory Management
 func TestDataFrameBuilderMemoryManagement(t *testing.T) {
 	t.Run("BuildAndFree", func(t *testing.T) {
-		df, err := polars.NewDataFrameBuilder().
+		df, err := polars.NewDataFrame().
 			AddStringColumn("name", []string{"Alice", "Bob"}).
 			AddIntColumn("age", []int64{25, 30}).
 			Build()
@@ -383,7 +383,7 @@ func TestDataFrameBuilderMemoryManagement(t *testing.T) {
 
 	t.Run("MultipleBuildAndFree", func(t *testing.T) {
 		for i := 0; i < 10; i++ {
-			df, err := polars.NewDataFrameBuilder().
+			df, err := polars.NewDataFrame().
 				AddStringColumn("test", []string{"data"}).
 				Build()
 

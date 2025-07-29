@@ -99,4 +99,16 @@ typedef struct {
 
 extern CDataFrame* create_dataframe_mixed(const CColumnSpec* column_specs, int column_count);
 
+// Join type enum
+typedef enum {
+    JOIN_INNER = 0,
+    JOIN_LEFT = 1,
+    JOIN_RIGHT = 2,
+    JOIN_OUTER = 3,
+} CJoinType;
+
+// Join functions
+extern CDataFrame* join_dataframes(CDataFrame* left_df, CDataFrame* right_df, const char* left_on, const char* right_on, CJoinType join_type);
+extern CDataFrame* join_dataframes_multiple_keys(CDataFrame* left_df, CDataFrame* right_df, const char* left_on, const char* right_on, CJoinType join_type);
+
 #endif

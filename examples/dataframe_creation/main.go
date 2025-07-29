@@ -13,7 +13,7 @@ func main() {
 	// Example 1: Create a mixed-type DataFrame (like Python Polars)
 	fmt.Println("\n🔸 Example 1: Mixed-type DataFrame")
 
-	df1, err := polars.NewDataFrameBuilder().
+	df1, err := polars.NewDataFrame().
 		AddStringColumn("name", []string{"Alice", "Bob", "Charlie", "Diana"}).
 		AddIntColumn("age", []int64{25, 30, 35, 28}).
 		AddFloatColumn("salary", []float64{50000.5, 60000.75, 70000.25, 55000.0}).
@@ -31,7 +31,7 @@ func main() {
 	// Example 2: Employee data with operations
 	fmt.Println("\n🔸 Example 2: Employee data with filtering and calculations")
 
-	employees, err := polars.NewDataFrameBuilder().
+	employees, err := polars.NewDataFrame().
 		AddStringColumn("department", []string{"Engineering", "Sales", "Marketing", "Engineering", "Sales"}).
 		AddStringColumn("employee", []string{"John", "Jane", "Bob", "Alice", "Charlie"}).
 		AddIntColumn("years_experience", []int64{5, 3, 7, 2, 4}).
@@ -63,7 +63,7 @@ func main() {
 	// Example 3: Product inventory
 	fmt.Println("\n🔸 Example 3: Product inventory management")
 
-	inventory, err := polars.NewDataFrameBuilder().
+	inventory, err := polars.NewDataFrame().
 		AddStringColumn("product_id", []string{"LAPTOP001", "MOUSE002", "KEYBOARD003", "MONITOR004"}).
 		AddStringColumn("category", []string{"Electronics", "Accessories", "Accessories", "Electronics"}).
 		AddIntColumn("quantity", []int64{50, 200, 75, 30}).
@@ -91,7 +91,7 @@ func main() {
 	// Example 4: Time series data
 	fmt.Println("\n🔸 Example 4: Sales performance data")
 
-	sales, err := polars.NewDataFrameBuilder().
+	sales, err := polars.NewDataFrame().
 		AddStringColumn("month", []string{"Jan", "Feb", "Mar", "Apr", "May", "Jun"}).
 		AddIntColumn("units_sold", []int64{120, 135, 98, 167, 189, 203}).
 		AddFloatColumn("revenue", []float64{12000.50, 13500.75, 9800.25, 16700.00, 18900.50, 20300.75}).
@@ -121,7 +121,7 @@ func main() {
 	fmt.Println("\n🔸 Example 5: Complex data processing pipeline")
 
 	// Start with raw data
-	rawData, err := polars.NewDataFrameBuilder().
+	rawData, err := polars.NewDataFrame().
 		AddStringColumn("customer_type", []string{"Premium", "Standard", "Premium", "Basic", "Standard", "Premium"}).
 		AddIntColumn("transaction_count", []int64{45, 12, 38, 5, 18, 52}).
 		AddFloatColumn("total_spent", []float64{4500.00, 800.00, 3200.00, 150.00, 1200.00, 5100.00}).
@@ -154,7 +154,7 @@ func main() {
 	fmt.Println("Processed customer data (high-value customers):")
 	fmt.Println(processedData.String())
 
-	fmt.Println("\n✅ DataFrame creation examples completed!")
+	fmt.Println("\n=== DataFrame creation examples completed! ===")
 
 	// Clean up
 	df1.Free()

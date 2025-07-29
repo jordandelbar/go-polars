@@ -230,7 +230,7 @@ make dev
 ```
 ## 📋 To do
 
-- [ ] Join operations
+- [x] Join operations
 - [ ] Data type conversions: `Cast()`
 - [ ] Schema inspection
 - [ ] Null handling: `IsNull()`, `IsNotNull()`, `FillNull()`

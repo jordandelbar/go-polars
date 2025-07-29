@@ -338,7 +338,7 @@ func main() {
 	fmt.Println("🚀 go-polars Example")
 
 	// Create a DataFrame
-	df, err := polars.NewDataFrameBuilder().
+	df, err := polars.NewDataFrame().
 		AddStringColumn("name", []string{"Alice", "Bob", "Charlie"}).
 		AddIntColumn("age", []int64{25, 30, 35}).
 		AddFloatColumn("score", []float64{85.5, 92.0, 78.5}).

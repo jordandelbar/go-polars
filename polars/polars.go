@@ -658,6 +658,108 @@ func (df *DataFrame) Sort(columns ...string) *DataFrame {
 	return &DataFrame{ptr: (*C.CDataFrame)(sortedPtr)}
 }
 
+// JoinType represents the type of join operation
+type JoinType string
+
+const (
+	JoinInner JoinType = "inner"
+	JoinLeft  JoinType = "left"
+	JoinRight JoinType = "right"
+	JoinOuter JoinType = "outer"
+)
+
+// Join performs a join operation with another DataFrame on matching columns
+func (df *DataFrame) Join(other *DataFrame, on string, how JoinType) *DataFrame {
+	return df.JoinOn(other, on, on, how)
+}
+
+// JoinOn performs a join operation with another DataFrame using different column names for left and right
+func (df *DataFrame) JoinOn(other *DataFrame, leftOn, rightOn string, how JoinType) *DataFrame {
+	if df == nil || df.ptr == nil {
+		log.Println("error: left DataFrame is nil")
+		return &DataFrame{}
+	}
+
+	if other == nil || other.ptr == nil {
+		log.Println("error: right DataFrame is nil")
+		return &DataFrame{}
+	}
+
+	cLeftOn := C.CString(leftOn)
+	defer C.free(unsafe.Pointer(cLeftOn))
+
+	cRightOn := C.CString(rightOn)
+	defer C.free(unsafe.Pointer(cRightOn))
+
+	var cJoinType C.CJoinType
+	switch how {
+	case JoinInner:
+		cJoinType = C.JOIN_INNER
+	case JoinLeft:
+		cJoinType = C.JOIN_LEFT
+	case JoinRight:
+		cJoinType = C.JOIN_RIGHT
+	case JoinOuter:
+		cJoinType = C.JOIN_OUTER
+	default:
+		log.Printf("error: unknown join type %s", how)
+		return &DataFrame{}
+	}
+
+	joinedPtr := C.join_dataframes(df.ptr, other.ptr, cLeftOn, cRightOn, cJoinType)
+	if joinedPtr == nil {
+		err := errors.New(C.GoString(C.get_last_error_message()))
+		log.Printf("Error while joining: %s", err)
+		return &DataFrame{}
+	}
+
+	return &DataFrame{ptr: (*C.CDataFrame)(joinedPtr)}
+}
+
+// JoinMultiple performs a join operation with multiple key columns
+// leftOn and rightOn should be comma-separated column names
+func (df *DataFrame) JoinMultiple(other *DataFrame, leftOn, rightOn string, how JoinType) *DataFrame {
+	if df == nil || df.ptr == nil {
+		log.Println("error: left DataFrame is nil")
+		return &DataFrame{}
+	}
+
+	if other == nil || other.ptr == nil {
+		log.Println("error: right DataFrame is nil")
+		return &DataFrame{}
+	}
+
+	cLeftOn := C.CString(leftOn)
+	defer C.free(unsafe.Pointer(cLeftOn))
+
+	cRightOn := C.CString(rightOn)
+	defer C.free(unsafe.Pointer(cRightOn))
+
+	var cJoinType C.CJoinType
+	switch how {
+	case JoinInner:
+		cJoinType = C.JOIN_INNER
+	case JoinLeft:
+		cJoinType = C.JOIN_LEFT
+	case JoinRight:
+		cJoinType = C.JOIN_RIGHT
+	case JoinOuter:
+		cJoinType = C.JOIN_OUTER
+	default:
+		log.Printf("error: unknown join type %s", how)
+		return &DataFrame{}
+	}
+
+	joinedPtr := C.join_dataframes_multiple_keys(df.ptr, other.ptr, cLeftOn, cRightOn, cJoinType)
+	if joinedPtr == nil {
+		err := errors.New(C.GoString(C.get_last_error_message()))
+		log.Printf("Error while joining: %s", err)
+		return &DataFrame{}
+	}
+
+	return &DataFrame{ptr: (*C.CDataFrame)(joinedPtr)}
+}
+
 // DataFrameBuilder provides a fluent API for building DataFrames with mixed column types.
 type DataFrameBuilder struct {
 	columns  []columnSpec
@@ -672,8 +774,8 @@ type columnSpec struct {
 	length     int
 }
 
-// NewDataFrameBuilder creates a new DataFrameBuilder.
-func NewDataFrameBuilder() *DataFrameBuilder {
+// NewDataFrame creates a new DataFrameBuilder.
+func NewDataFrame() *DataFrameBuilder {
 	return &DataFrameBuilder{
 		columns: make([]columnSpec, 0),
 	}
