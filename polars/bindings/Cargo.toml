@@ -7,14 +7,22 @@ edition = "2021"
 crate-type = ["staticlib"]
 
 [dependencies]
+lazy_static = "1.5"
 polars = { version = "0.46", default-features = false, features = [
     "csv",
     "lazy",
     "parquet",
+    "json",
     "strings",
+    "regex",
+    "is_in",
     "fmt",
+    "dtype-datetime",
+    "approx_unique",
+    "product",
+    "diagonal_concat",
+    "streaming",
 ] }
-lazy_static = "1.5"
 
 [profile.release]
 strip = true

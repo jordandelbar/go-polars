@@ -18,12 +18,32 @@ pub struct CGroupBy {
     pub inner: *mut c_void,
 }
 
+#[repr(C)]
+pub struct CLazyFrame {
+    pub inner: *mut c_void,
+}
+
 pub fn polars_df_to_c_df(df: DataFrame) -> *mut CDataFrame {
     let rc_df = Rc::new(RefCell::new(df));
     let boxed_df = Box::new(rc_df);
     let inner = Box::into_raw(boxed_df) as *mut c_void;
     let c_df = CDataFrame { inner };
     Box::into_raw(Box::new(c_df))
+}
+
+pub fn lazyframe_to_c_lazyframe(lf: LazyFrame) -> *mut CLazyFrame {
+    let boxed_lf = Box::new(lf);
+    let inner = Box::into_raw(boxed_lf) as *mut c_void;
+    let c_lf = CLazyFrame { inner };
+    Box::into_raw(Box::new(c_lf))
+}
+
+pub unsafe fn c_lazyframe_to_lazyframe(c_lf: *mut CLazyFrame) -> Result<LazyFrame, String> {
+    if c_lf.is_null() || (*c_lf).inner.is_null() {
+        return Err("CLazyFrame or inner pointer is null".to_string());
+    }
+    let lf_ptr = (*c_lf).inner as *mut LazyFrame;
+    Ok((*lf_ptr).clone())
 }
 
 pub unsafe fn c_df_to_polars_df(c_df: *mut CDataFrame) -> Result<Rc<RefCell<DataFrame>>, String> {
@@ -55,10 +75,9 @@ pub unsafe fn c_expr_to_expr(c_expr: *mut CExpr) -> Result<Expr, String> {
     if c_expr.is_null() || (*c_expr).inner.is_null() {
         return Err("CExpr or inner pointer is null".to_string());
     }
-    let c_expr_struct = Box::from_raw(c_expr);
-    let expr_ptr = c_expr_struct.inner as *mut Expr;
-    let expr = *Box::from_raw(expr_ptr);
-    Ok(expr)
+    // Clone the underlying Expr without taking ownership so the caller can reuse the pointer.
+    let expr_ptr = (*c_expr).inner as *mut Expr;
+    Ok((*expr_ptr).clone())
 }
 
 pub fn groupby_to_c_groupby(gb: LazyGroupBy) -> *mut CGroupBy {

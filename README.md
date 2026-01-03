@@ -110,6 +110,20 @@ go-polars supports a comprehensive set of expression operations for data manipul
 - `Or(expr)` - Logical OR
 - `Not()` - Logical NOT
 
+#### Conditional Logic
+- `When(cond).Then(expr)...Otherwise(expr)` - Polars-style row-wise branching with optional `ThenValue`/`OtherwiseValue` helpers for literals
+
+```go
+df = df.WithColumns(
+    polars.When(polars.Col("score").Gt(90)).
+        ThenValue("A").
+        When(polars.Col("score").Gt(75)).
+        ThenValue("B").
+        OtherwiseValue("C").
+        Alias("grade"),
+)
+```
+
 ### GroupBy and Aggregation Operations
 
 go-polars provides powerful GroupBy functionality for data aggregation:
@@ -231,15 +245,15 @@ make dev
 ## 📋 To do
 
 - [x] Join operations
-- [ ] Data type conversions: `Cast()`
-- [ ] Schema inspection
-- [ ] Null handling: `IsNull()`, `IsNotNull()`, `FillNull()`
-- [ ] Advanced Aggregations: `Median()`,...
+- [x] Data type conversions: `Cast()`
+- [x] Schema inspection
+- [x] Null handling: `IsNull()`, `IsNotNull()`, `FillNull()`
+- [x] Advanced Aggregations: `Median()`, `Quantile()`, `Var()`, `NUnique()`, `ApproxNUnique()`, `Product()`, `First()`, `Last()`
 - [ ] Window functions
 - [ ] Pivot & Reshape options
-- [ ] Additional I/O Formats: `ReadJSON()`, `WriteJSON()`,...
-- [ ] When/Otherwise logic
-- [ ] Data Quality & Validation: `IsEmpty()`,...
+- [x] Additional I/O Formats: `ReadJSON()`, `WriteJSON()`,...
+- [x] When/Otherwise logic
+- [x] Data Quality & Validation: `IsEmpty()`,...
 
 ## 🤝 Contributing
 

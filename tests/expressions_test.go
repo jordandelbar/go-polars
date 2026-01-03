@@ -557,6 +557,74 @@ func TestLogicalOperations(t *testing.T) {
 	})
 }
 
+func TestStringAndIsInHelpers(t *testing.T) {
+	df := loadTestData(t)
+
+	lowered := df.WithColumns(
+		polars.Col("variety").StrToLower().Alias("variety_lower"),
+	)
+	if lowered.Height() != df.Height() {
+		t.Error("StrToLower should preserve row count")
+	}
+
+	containsSetosa := lowered.Filter(polars.Col("variety_lower").StrContains("setosa", true))
+	if containsSetosa.Height() == 0 {
+		t.Error("StrContains should find setosa entries")
+	}
+
+	replaced := df.WithColumns(polars.Col("variety").StrReplace("Set", "S", true).Alias("variety_short"))
+	if replaced.Height() != df.Height() {
+		t.Error("StrReplace should preserve row count")
+	}
+
+	startsWithV := df.Filter(polars.Col("variety").StrStartsWith("V"))
+	if startsWithV.Height() == 0 {
+		t.Error("StrStartsWith should match Versicolor/Virginica rows")
+	}
+
+	lenCol := df.WithColumns(polars.Col("variety").StrLenChars().Alias("variety_len"))
+	if lenCol.Height() != df.Height() {
+		t.Error("StrLenChars should preserve row count")
+	}
+
+	inFilter := df.Filter(polars.Col("variety").IsIn([]string{"Setosa", "Versicolor"}))
+	if inFilter.Height() == 0 {
+		t.Error("IsIn should match provided varieties")
+	}
+}
+
+func TestWhenOtherwiseLogic(t *testing.T) {
+	df := loadTestData(t)
+
+	result := df.WithColumns(
+		polars.When(polars.Col("petal.length").Gt(5)).
+			ThenValue(int64(2)).
+			When(polars.Col("petal.length").Gt(3)).
+			ThenValue(int64(1)).
+			OtherwiseValue(int64(0)).
+			Alias("length_bucket"),
+	)
+
+	if result.Height() != df.Height() {
+		t.Error("When/Otherwise should preserve row count")
+	}
+
+	columns := result.Columns()
+	if !slices.Contains(columns, "length_bucket") {
+		t.Error("Expected When/Otherwise column to be present")
+	}
+
+	longBucket := result.Filter(polars.Col("length_bucket").Eq(2))
+	if longBucket.Height() == 0 {
+		t.Error("Expected some rows categorized as long")
+	}
+
+	shortBucket := result.Filter(polars.Col("length_bucket").Eq(0))
+	if shortBucket.Height() == 0 {
+		t.Error("Expected some rows categorized as short")
+	}
+}
+
 // Test Complex Expression Combinations
 func TestComplexExpressions(t *testing.T) {
 	df := loadTestData(t)

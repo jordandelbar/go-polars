@@ -1,0 +1,80 @@
+name: Pre-Release
+
+on:
+  push:
+    # branches:
+    #   - esword
+    tags:
+      - "pre/**"
+
+jobs:
+  prerelease:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.x"
+
+      - name: Install make (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: choco install make
+
+      - name: Build
+        shell: bash
+        run: ./build.sh --force
+
+      - name: Verify artifact path (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          ls -l polars/bin || true
+          test -f polars/bin/libpolars_go.a
+
+      - name: Rename artifact with platform suffix (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          cp polars/bin/libpolars_go.a polars/bin/libpolars_go-${{ runner.os }}-${{ runner.arch }}.a
+
+      - name: Verify artifact path (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Get-ChildItem polars/bin
+          if (-not (Test-Path polars/bin/polars_go.lib)) { exit 1 }
+
+      - name: Rename artifact with platform suffix (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Copy-Item polars/bin/polars_go.lib polars/bin/polars_go-${{ runner.os }}-${{ runner.arch }}.lib -Force
+
+      - name: Upload pre-release asset (Linux/macOS)
+        if: runner.os != 'Windows'
+        uses: softprops/action-gh-release@v1
+        with:
+          prerelease: true
+          fail_on_unmatched_files: true
+          files: polars/bin/libpolars_go-${{ runner.os }}-${{ runner.arch }}.a
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload pre-release asset (Windows)
+        if: runner.os == 'Windows'
+        uses: softprops/action-gh-release@v1
+        with:
+          prerelease: true
+          fail_on_unmatched_files: true
+          files: polars/bin/polars_go-${{ runner.os }}-${{ runner.arch }}.lib
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
