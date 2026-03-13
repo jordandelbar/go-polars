@@ -167,11 +167,11 @@ func Col(name string) Expr {
 func (e Expr) Gt(value interface{}) Expr {
 	switch v := value.(type) {
 	case int:
-		return Expr{ptr: (*C.CExpr)(C.col_gt(e.ptr, C.long(v)))}
+		return Expr{ptr: (*C.CExpr)(C.col_gt(e.ptr, C.int64_t(v)))}
 	case int32:
-		return Expr{ptr: (*C.CExpr)(C.col_gt(e.ptr, C.long(v)))}
+		return Expr{ptr: (*C.CExpr)(C.col_gt(e.ptr, C.int64_t(v)))}
 	case int64:
-		return Expr{ptr: (*C.CExpr)(C.col_gt(e.ptr, C.long(v)))}
+		return Expr{ptr: (*C.CExpr)(C.col_gt(e.ptr, C.int64_t(v)))}
 	case float32:
 		return Expr{ptr: (*C.CExpr)(C.col_gt_f64(e.ptr, C.double(v)))}
 	case float64:
@@ -183,7 +183,7 @@ func (e Expr) Gt(value interface{}) Expr {
 		} else {
 			intVal = 0
 		}
-		return Expr{ptr: (*C.CExpr)(C.col_gt(e.ptr, C.long(intVal)))}
+		return Expr{ptr: (*C.CExpr)(C.col_gt(e.ptr, C.int64_t(intVal)))}
 	default:
 		panic("Gt: unsupported value type")
 	}
@@ -193,11 +193,11 @@ func (e Expr) Gt(value interface{}) Expr {
 func (e Expr) Lt(value interface{}) Expr {
 	switch v := value.(type) {
 	case int:
-		return Expr{ptr: (*C.CExpr)(C.col_lt(e.ptr, C.long(v)))}
+		return Expr{ptr: (*C.CExpr)(C.col_lt(e.ptr, C.int64_t(v)))}
 	case int32:
-		return Expr{ptr: (*C.CExpr)(C.col_lt(e.ptr, C.long(v)))}
+		return Expr{ptr: (*C.CExpr)(C.col_lt(e.ptr, C.int64_t(v)))}
 	case int64:
-		return Expr{ptr: (*C.CExpr)(C.col_lt(e.ptr, C.long(v)))}
+		return Expr{ptr: (*C.CExpr)(C.col_lt(e.ptr, C.int64_t(v)))}
 	case float32:
 		return Expr{ptr: (*C.CExpr)(C.col_lt_f64(e.ptr, C.double(v)))}
 	case float64:
@@ -209,7 +209,7 @@ func (e Expr) Lt(value interface{}) Expr {
 		} else {
 			intVal = 0
 		}
-		return Expr{ptr: (*C.CExpr)(C.col_lt(e.ptr, C.long(intVal)))}
+		return Expr{ptr: (*C.CExpr)(C.col_lt(e.ptr, C.int64_t(intVal)))}
 	default:
 		panic("Lt: unsupported value type")
 	}
@@ -219,11 +219,11 @@ func (e Expr) Lt(value interface{}) Expr {
 func (e Expr) Eq(value interface{}) Expr {
 	switch v := value.(type) {
 	case int:
-		return Expr{ptr: (*C.CExpr)(C.col_eq(e.ptr, C.long(v)))}
+		return Expr{ptr: (*C.CExpr)(C.col_eq(e.ptr, C.int64_t(v)))}
 	case int32:
-		return Expr{ptr: (*C.CExpr)(C.col_eq(e.ptr, C.long(v)))}
+		return Expr{ptr: (*C.CExpr)(C.col_eq(e.ptr, C.int64_t(v)))}
 	case int64:
-		return Expr{ptr: (*C.CExpr)(C.col_eq(e.ptr, C.long(v)))}
+		return Expr{ptr: (*C.CExpr)(C.col_eq(e.ptr, C.int64_t(v)))}
 	case float32:
 		return Expr{ptr: (*C.CExpr)(C.col_eq_f64(e.ptr, C.double(v)))}
 	case float64:
@@ -235,7 +235,7 @@ func (e Expr) Eq(value interface{}) Expr {
 		} else {
 			intVal = 0
 		}
-		return Expr{ptr: (*C.CExpr)(C.col_eq(e.ptr, C.long(intVal)))}
+		return Expr{ptr: (*C.CExpr)(C.col_eq(e.ptr, C.int64_t(intVal)))}
 	default:
 		panic("Eq: unsupported value type")
 	}
@@ -245,11 +245,11 @@ func (e Expr) Eq(value interface{}) Expr {
 func (e Expr) Ne(value interface{}) Expr {
 	switch v := value.(type) {
 	case int:
-		return Expr{ptr: (*C.CExpr)(C.col_ne(e.ptr, C.long(v)))}
+		return Expr{ptr: (*C.CExpr)(C.col_ne(e.ptr, C.int64_t(v)))}
 	case int32:
-		return Expr{ptr: (*C.CExpr)(C.col_ne(e.ptr, C.long(v)))}
+		return Expr{ptr: (*C.CExpr)(C.col_ne(e.ptr, C.int64_t(v)))}
 	case int64:
-		return Expr{ptr: (*C.CExpr)(C.col_ne(e.ptr, C.long(v)))}
+		return Expr{ptr: (*C.CExpr)(C.col_ne(e.ptr, C.int64_t(v)))}
 	case float32:
 		return Expr{ptr: (*C.CExpr)(C.col_ne_f64(e.ptr, C.double(v)))}
 	case float64:
@@ -261,7 +261,7 @@ func (e Expr) Ne(value interface{}) Expr {
 		} else {
 			intVal = 0
 		}
-		return Expr{ptr: (*C.CExpr)(C.col_ne(e.ptr, C.long(intVal)))}
+		return Expr{ptr: (*C.CExpr)(C.col_ne(e.ptr, C.int64_t(intVal)))}
 	default:
 		panic("Ne: unsupported value type")
 	}
@@ -271,11 +271,11 @@ func (e Expr) Ne(value interface{}) Expr {
 func (e Expr) Ge(value interface{}) Expr {
 	switch v := value.(type) {
 	case int:
-		return Expr{ptr: (*C.CExpr)(C.col_ge(e.ptr, C.long(v)))}
+		return Expr{ptr: (*C.CExpr)(C.col_ge(e.ptr, C.int64_t(v)))}
 	case int32:
-		return Expr{ptr: (*C.CExpr)(C.col_ge(e.ptr, C.long(v)))}
+		return Expr{ptr: (*C.CExpr)(C.col_ge(e.ptr, C.int64_t(v)))}
 	case int64:
-		return Expr{ptr: (*C.CExpr)(C.col_ge(e.ptr, C.long(v)))}
+		return Expr{ptr: (*C.CExpr)(C.col_ge(e.ptr, C.int64_t(v)))}
 	case float32:
 		return Expr{ptr: (*C.CExpr)(C.col_ge_f64(e.ptr, C.double(v)))}
 	case float64:
@@ -287,7 +287,7 @@ func (e Expr) Ge(value interface{}) Expr {
 		} else {
 			intVal = 0
 		}
-		return Expr{ptr: (*C.CExpr)(C.col_ge(e.ptr, C.long(intVal)))}
+		return Expr{ptr: (*C.CExpr)(C.col_ge(e.ptr, C.int64_t(intVal)))}
 	default:
 		panic("Ge: unsupported value type")
 	}
@@ -297,11 +297,11 @@ func (e Expr) Ge(value interface{}) Expr {
 func (e Expr) Le(value interface{}) Expr {
 	switch v := value.(type) {
 	case int:
-		return Expr{ptr: (*C.CExpr)(C.col_le(e.ptr, C.long(v)))}
+		return Expr{ptr: (*C.CExpr)(C.col_le(e.ptr, C.int64_t(v)))}
 	case int32:
-		return Expr{ptr: (*C.CExpr)(C.col_le(e.ptr, C.long(v)))}
+		return Expr{ptr: (*C.CExpr)(C.col_le(e.ptr, C.int64_t(v)))}
 	case int64:
-		return Expr{ptr: (*C.CExpr)(C.col_le(e.ptr, C.long(v)))}
+		return Expr{ptr: (*C.CExpr)(C.col_le(e.ptr, C.int64_t(v)))}
 	case float32:
 		return Expr{ptr: (*C.CExpr)(C.col_le_f64(e.ptr, C.double(v)))}
 	case float64:
@@ -313,7 +313,7 @@ func (e Expr) Le(value interface{}) Expr {
 		} else {
 			intVal = 0
 		}
-		return Expr{ptr: (*C.CExpr)(C.col_le(e.ptr, C.long(intVal)))}
+		return Expr{ptr: (*C.CExpr)(C.col_le(e.ptr, C.int64_t(intVal)))}
 	default:
 		panic("Le: unsupported value type")
 	}
@@ -413,11 +413,11 @@ func Lit(value interface{}) Expr {
 
 	switch v := value.(type) {
 	case int64:
-		cExpr = C.lit_int64(C.long(v))
+		cExpr = C.lit_int64(C.int64_t(v))
 	case int32:
 		cExpr = C.lit_int32(C.int(v))
 	case int:
-		cExpr = C.lit_int64(C.long(v)) // Treat as int64
+		cExpr = C.lit_int64(C.int64_t(v)) // Treat as int64
 	case float64:
 		cExpr = C.lit_float64(C.double(v))
 	case float32:
